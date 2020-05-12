@@ -42,7 +42,6 @@ import com.squareup.javapoet.TypeName.INT
 import com.squareup.javapoet.TypeName.LONG
 import com.squareup.javapoet.TypeName.SHORT
 import com.squareup.javapoet.TypeSpec
-import java.io.IOException
 import java.lang.annotation.AnnotationTypeMismatchException
 import java.lang.ref.WeakReference
 import java.util.ArrayList
@@ -50,6 +49,7 @@ import java.util.Arrays
 import java.util.BitSet
 import java.util.Objects
 import javax.annotation.processing.Filer
+import javax.lang.model.element.Element
 import javax.lang.model.element.Modifier
 import javax.lang.model.element.Modifier.FINAL
 import javax.lang.model.element.Modifier.PRIVATE
@@ -60,10 +60,10 @@ import javax.lang.model.element.TypeElement
 import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
 
-internal class GeneratedModelWriter(
+class GeneratedModelWriter(
     private val filer: Filer,
     private val types: Types,
-    private val errorLogger: ErrorLogger,
+    private val logger: Logger,
     private val resourceProcessor: ResourceProcessor,
     private val configManager: ConfigManager,
     private val dataBindingModuleLookup: DataBindingModuleLookup,
@@ -72,9 +72,7 @@ internal class GeneratedModelWriter(
 
     val modelInterfaceWriter = ModelBuilderInterfaceWriter(filer, types)
 
-    private var builderHooks: BuilderHooks? = null
-
-    internal open class BuilderHooks {
+    open class BuilderHooks {
         open fun beforeFinalBuild(builder: TypeSpec.Builder) {}
 
         /** Opportunity to add additional code to the unbind method.  */
@@ -129,13 +127,11 @@ internal class GeneratedModelWriter(
         modelInterfaceWriter.writeFilesForViewInterfaces()
     }
 
-    @Throws(IOException::class)
-    @JvmOverloads
     fun generateClassForModel(
         info: GeneratedModelInfo,
+        originatingElements: List<Element>,
         builderHooks: BuilderHooks? = null
     ) {
-        this.builderHooks = builderHooks
         if (!info.shouldGenerateModel) {
             return
         }
@@ -156,8 +152,8 @@ internal class GeneratedModelWriter(
             generateDebugAddToMethodIfNeeded(this, info)
 
             addMethods(generateProgrammaticViewMethods(info))
-            addMethods(generateBindMethods(info))
-            addMethods(generateVisibilityMethods(info))
+            addMethods(generateBindMethods(builderHooks, info))
+            addMethods(generateVisibilityMethods(builderHooks, info))
             addMethods(generateStyleableViewMethods(info))
             addMethods(generateSettersAndGetters(info))
             addMethods(generateMethodsReturningClassType(info))
@@ -174,11 +170,15 @@ internal class GeneratedModelWriter(
             builderHooks?.beforeFinalBuild(this)
 
             addSuperinterface(modelInterfaceWriter.writeInterface(info, this.build().methodSpecs))
+
+            originatingElements.forEach {
+                addOriginatingElement(it)
+            }
         }
 
         JavaFile.builder(generatedModelName.packageName(), modelClass)
             .build()
-            .writeTo(filer)
+            .writeSynchronized(filer)
     }
 
     private fun generateOtherLayoutOptions(info: GeneratedModelInfo): Iterable<MethodSpec> {
@@ -499,13 +499,16 @@ internal class GeneratedModelWriter(
         }
     }
 
-    private fun generateVisibilityMethods(modelInfo: GeneratedModelInfo): Iterable<MethodSpec> {
+    private fun generateVisibilityMethods(
+        builderHooks: BuilderHooks?,
+        modelInfo: GeneratedModelInfo
+    ): Iterable<MethodSpec> {
         val methods = ArrayList<MethodSpec>()
 
         val visibilityObjectParam =
             ParameterSpec.builder(modelInfo.modelType, "object", FINAL).build()
 
-        methods.add(buildVisibilityStateChangedMethod(visibilityObjectParam))
+        methods.add(buildVisibilityStateChangedMethod(builderHooks, visibilityObjectParam))
 
         val onVisibilityStateChangedListenerType = ParameterizedTypeName.get(
             getClassName(ON_VISIBILITY_STATE_MODEL_LISTENER_TYPE),
@@ -533,7 +536,7 @@ internal class GeneratedModelWriter(
 
         methods.add(onVisibilityStateChanged.build())
 
-        methods.add(buildVisibilityChangedMethod(visibilityObjectParam))
+        methods.add(buildVisibilityChangedMethod(builderHooks, visibilityObjectParam))
 
         val onVisibilityChangedListenerType = ParameterizedTypeName.get(
             getClassName(ON_VISIBILITY_MODEL_LISTENER_TYPE),
@@ -564,7 +567,10 @@ internal class GeneratedModelWriter(
         return methods
     }
 
-    private fun generateBindMethods(modelInfo: GeneratedModelInfo): Iterable<MethodSpec> {
+    private fun generateBindMethods(
+        builderHooks: BuilderHooks?,
+        modelInfo: GeneratedModelInfo
+    ): Iterable<MethodSpec> {
         val methods = ArrayList<MethodSpec>()
 
         // Add bind/unbind methods so the class can set the epoxyModelBoundObject and
@@ -581,8 +587,8 @@ internal class GeneratedModelWriter(
         // If the view is styleable then we need to override bind to apply the style
         // If builderhooks is nonnull we assume that it is adding code to the bind methods
         if (builderHooks != null || modelInfo.isStyleable) {
-            methods.add(buildBindMethod(boundObjectParam, modelInfo))
-            methods.add(buildBindWithDiffMethod(modelInfo, boundObjectParam))
+            methods.add(buildBindMethod(builderHooks, boundObjectParam, modelInfo))
+            methods.add(buildBindWithDiffMethod(builderHooks, modelInfo, boundObjectParam))
         }
 
         val postBind = buildMethod("handlePostBind") {
@@ -696,6 +702,7 @@ internal class GeneratedModelWriter(
     }
 
     private fun buildBindMethod(
+        builderHooks: BuilderHooks?,
         boundObjectParam: ParameterSpec,
         modelInfo: GeneratedModelInfo
     ) = buildMethod("bind") {
@@ -718,6 +725,7 @@ internal class GeneratedModelWriter(
     }
 
     private fun buildVisibilityStateChangedMethod(
+        builderHooks: BuilderHooks?,
         visibilityObjectParam: ParameterSpec
     ) = buildMethod("onVisibilityStateChanged") {
         addAnnotation(Override::class.java)
@@ -745,6 +753,7 @@ internal class GeneratedModelWriter(
     }
 
     private fun buildVisibilityChangedMethod(
+        builderHooks: BuilderHooks?,
         visibilityObjectParam: ParameterSpec
     ) = buildMethod("onVisibilityChanged") {
         addAnnotation(Override::class.java)
@@ -772,6 +781,7 @@ internal class GeneratedModelWriter(
     }
 
     private fun buildBindWithDiffMethod(
+        builderHooks: BuilderHooks?,
         classInfo: GeneratedModelInfo,
         boundObjectParam: ParameterSpec
     ) = buildMethod("bind") {
@@ -1139,7 +1149,7 @@ internal class GeneratedModelWriter(
 
         val modelClassWithAnnotation = findSuperClassWithClassAnnotation(superClassElement)
         if (modelClassWithAnnotation == null) {
-            errorLogger
+            logger
                 .logError(
                     "Model must use %s annotation if it does not implement %s. (class: %s)",
                     EpoxyModelClass::class.java,
@@ -1175,7 +1185,9 @@ internal class GeneratedModelWriter(
 
         // If the base method is already implemented don't bother checking for the payload method
         if (implementsMethod(
-                info.superClassElement, bindVariablesMethod, types,
+                info.superClassElement,
+                bindVariablesMethod,
+                types,
                 elements
             )
         ) {
@@ -1261,7 +1273,7 @@ internal class GeneratedModelWriter(
         try {
             layoutRes = annotation.layout
         } catch (e: AnnotationTypeMismatchException) {
-            errorLogger.logError(
+            logger.logError(
                 "Invalid layout value in %s annotation. (class: %s). %s: %s",
                 EpoxyModelClass::class.java,
                 classElement.simpleName,
@@ -1284,7 +1296,7 @@ internal class GeneratedModelWriter(
             return superClassWithAnnotation
         }
 
-        errorLogger
+        logger
             .logError(
                 "Model must specify a valid layout resource in the %s annotation. " +
                     "(class: %s)",
@@ -1661,7 +1673,7 @@ internal class GeneratedModelWriter(
         // to set it
         if (!attribute.isPrivate && attribute.hasSuperSetter) {
             if (hasMultipleParams) {
-                errorLogger
+                logger
                     .logError(
                         "Multi params not supported for methods that call super (%s)",
                         attribute
@@ -1767,11 +1779,10 @@ internal class GeneratedModelWriter(
                 attributeInfoConditions.any { it.invoke(attributeInfo) }
             }
         }
-        val supportedWithSetterAttributeInfo = supportedAttributeInfo
             .filter { it.generateSetter && !it.hasFinalModifier }
 
         // If none of the properties are of a supported type the method isn't generated
-        if (supportedWithSetterAttributeInfo.isEmpty()) {
+        if (supportedAttributeInfo.isEmpty()) {
             return
         }
 
@@ -1825,7 +1836,7 @@ internal class GeneratedModelWriter(
                         attributeInfo.isStringList -> "getStringList"
                         attributeInfo.isViewClickListener -> "getOnClickListener"
                         else -> {
-                            errorLogger.logError(
+                            logger.logError(
                                 "Missing ModelProperties method for a supported attribute type."
                             )
                             null
@@ -2013,7 +2024,8 @@ internal class GeneratedModelWriter(
                             accessorCode
                         )
                         is ArrayTypeName -> addStatement(
-                            "$HASH_CODE_RESULT_PROPERTY = 31 * $HASH_CODE_RESULT_PROPERTY + Arrays.hashCode(\$L)", accessorCode
+                            "$HASH_CODE_RESULT_PROPERTY = 31 * $HASH_CODE_RESULT_PROPERTY + Arrays.hashCode(\$L)",
+                            accessorCode
                         )
                         else -> addStatement(
                             "$HASH_CODE_RESULT_PROPERTY = 31 * $HASH_CODE_RESULT_PROPERTY + (\$L != null ? \$L.hashCode() : 0)",
@@ -2022,7 +2034,10 @@ internal class GeneratedModelWriter(
                         )
                     }
                 } else {
-                    addStatement("$HASH_CODE_RESULT_PROPERTY = 31 * $HASH_CODE_RESULT_PROPERTY + (\$L != null ? 1 : 0)", accessorCode)
+                    addStatement(
+                        "$HASH_CODE_RESULT_PROPERTY = 31 * $HASH_CODE_RESULT_PROPERTY + (\$L != null ? 1 : 0)",
+                        accessorCode
+                    )
                 }
             }
         }
@@ -2036,7 +2051,9 @@ internal class GeneratedModelWriter(
             elements: Elements
         ): Boolean {
             val methodOnClass = Utils.getMethodOnClass(
-                clazz, bindWithDiffMethod, types,
+                clazz,
+                bindWithDiffMethod,
+                types,
                 elements
             ) ?: return false
 

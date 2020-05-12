@@ -12,7 +12,7 @@ import com.squareup.javapoet.CodeBlock
 import com.squareup.javapoet.TypeName
 import javax.lang.model.type.TypeMirror
 
-internal abstract class AttributeInfo {
+abstract class AttributeInfo {
 
     lateinit var fieldName: String
         protected set
@@ -63,6 +63,7 @@ internal abstract class AttributeInfo {
      * call through to super.
      */
     var hasSuperSetter: Boolean = false
+
     // for private fields (Kotlin case)
     var isPrivate: Boolean = false
     protected var getterMethodName: String? = null
@@ -75,6 +76,7 @@ internal abstract class AttributeInfo {
      */
     var isGenerated: Boolean = false
         protected set
+
     /** If [.isGenerated] is true, a default value for the field can be set here.  */
     val codeToSetDefault = DefaultValue()
 
@@ -148,9 +150,10 @@ internal abstract class AttributeInfo {
     val isOverload: Boolean
         get() = attributeGroup != null && attributeGroup!!.attributes.size > 1
 
-    internal class DefaultValue {
+    class DefaultValue {
         /** An explicitly defined default via the default param in the prop annotation.  */
         var explicit: CodeBlock? = null
+
         /**
          * An implicitly assumed default, either via an @Nullable annotation or a primitive's default
          * value. This is overridden if an explicit value is set.
@@ -197,10 +200,10 @@ internal abstract class AttributeInfo {
 
     fun setterCode(): String =
         (if (isGenerated) "this." else "super.") +
-            if (isPrivate)
-                setterMethodName!! + "(\$L)"
-            else
-                "$fieldName = \$L"
+                if (isPrivate)
+                    setterMethodName!! + "(\$L)"
+                else
+                    "$fieldName = \$L"
 
     open fun generatedSetterName(): String = fieldName
 
@@ -208,10 +211,10 @@ internal abstract class AttributeInfo {
 
     override fun toString(): String {
         return ("Attribute {" +
-            "model='" + modelName + '\''.toString() +
-            ", name='" + fieldName + '\''.toString() +
-            ", type=" + typeName +
-            '}'.toString())
+                "model='" + modelName + '\''.toString() +
+                ", name='" + fieldName + '\''.toString() +
+                ", type=" + typeName +
+                '}'.toString())
     }
 
     override fun equals(other: Any?): Boolean {

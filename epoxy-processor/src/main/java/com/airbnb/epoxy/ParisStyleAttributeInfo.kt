@@ -2,8 +2,8 @@ package com.airbnb.epoxy
 
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.CodeBlock
+import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind
-import javax.lang.model.type.TypeMirror
 import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
 
@@ -23,7 +23,7 @@ internal class ParisStyleAttributeInfo(
     val types: Types,
     packageName: String,
     styleBuilderClassName: ClassName,
-    styleBuilderElement: TypeMirror
+    val styleBuilderElement: Element
 ) : AttributeInfo() {
 
     val styles: List<ParisStyle>
@@ -48,8 +48,8 @@ internal class ParisStyleAttributeInfo(
         codeToSetDefault.explicit = CodeBlock.of(PARIS_DEFAULT_STYLE_CONSTANT_NAME)
     }
 
-    private fun findStyleNames(typeMirror: TypeMirror): List<ParisStyle> {
-        return types.asElement(typeMirror)
+    private fun findStyleNames(styleBuilderElement: Element): List<ParisStyle> {
+        return styleBuilderElement
             .enclosedElements
             .filter {
                 it.kind == ElementKind.METHOD &&

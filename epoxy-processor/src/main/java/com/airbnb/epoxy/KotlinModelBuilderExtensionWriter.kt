@@ -10,53 +10,45 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.TypeVariableName
-import java.io.File
-import javax.annotation.processing.ProcessingEnvironment
+import kotlinx.coroutines.coroutineScope
+import javax.annotation.processing.Filer
 import javax.lang.model.element.Modifier
-
-private const val KOTLIN_EXTENSION_FILE_NAME = "EpoxyModelKotlinExtensions"
-
 internal class KotlinModelBuilderExtensionWriter(
-    private val processingEnv: ProcessingEnvironment
-) {
+    val filer: Filer,
+    asyncable: Asyncable
+) : Asyncable by asyncable {
 
-    fun generateExtensionsForModels(generatedModels: List<GeneratedModelInfo>) {
-        val kaptGeneratedDirPath =
-            processingEnv.options[EpoxyProcessor.KAPT_KOTLIN_GENERATED_OPTION_NAME]
-                ?.replace("kaptKotlin", "kapt")
-                ?: run {
-                    // Need to change the path because of https://youtrack.jetbrains.com/issue/KT-19097
-
-                    // If the option does not exist this is not being processed by kapt,
-                    // so we don't need to generate kotlin extensions
-                    return
-                }
-
+    suspend fun generateExtensionsForModels(
+        generatedModels: List<GeneratedModelInfo>,
+        processorName: String
+    ) {
         generatedModels
             .filter { it.shouldGenerateModel }
             .groupBy { it.generatedClassName.packageName() }
-            .map { (packageName, models) ->
+            .map("generateExtensionsForModels") { packageName, models ->
                 buildExtensionFile(
                     packageName,
-                    models
+                    models,
+                    processorName
                 )
-            }
-            .forEach {
-                it.writeTo(File(kaptGeneratedDirPath))
+            }.forEach("writeExtensionsForModels", parallel = false) {
+                // Cannot be done in parallel since filer is not thread safe
+                it.writeSynchronized(filer)
             }
     }
 
-    private fun buildExtensionFile(
+    private suspend fun buildExtensionFile(
         packageName: String,
-        models: List<GeneratedModelInfo>
-    ): FileSpec {
+        models: List<GeneratedModelInfo>,
+        processorName: String
+    ): FileSpec = coroutineScope {
         val fileBuilder = FileSpec.builder(
             packageName,
-            KOTLIN_EXTENSION_FILE_NAME
+            "Epoxy${processorName.removePrefix("Epoxy")}KotlinExtensions"
         )
 
         models
-            .flatMap {
+            .map("buildExtensionFile") {
                 if (it.constructors.isEmpty()) {
                     listOf(buildExtensionsForModel(it, null))
                 } else {
@@ -65,6 +57,7 @@ internal class KotlinModelBuilderExtensionWriter(
                     }
                 }
             }
+            .flatten()
             .forEach { fileBuilder.addFunction(it) }
 
         // We suppress Deprecation warnings for this class in case any of the models used are deprecated.
@@ -75,7 +68,7 @@ internal class KotlinModelBuilderExtensionWriter(
                 .build()
         )
 
-        return fileBuilder.build()
+        fileBuilder.build()
     }
 
     private fun buildExtensionsForModel(
@@ -124,6 +117,11 @@ internal class KotlinModelBuilderExtensionWriter(
             addStatement("modelInitializer()")
             endControlFlow()
             addStatement(".addTo(this)")
+
+            model.originatingElements().forEach {
+                addOriginatingElement(it)
+            }
+
             return build()
         }
     }

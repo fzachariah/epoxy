@@ -5,6 +5,7 @@ import com.squareup.javapoet.MethodSpec
 import com.squareup.javapoet.ParameterSpec
 import com.squareup.javapoet.TypeName
 import com.squareup.javapoet.TypeSpec
+import javax.lang.model.element.Element
 import javax.lang.model.element.Modifier
 import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
@@ -14,21 +15,21 @@ import javax.lang.model.util.Types
  */
 internal class ModelViewWriter(
     private val modelWriter: GeneratedModelWriter,
-    val errorLogger: ErrorLogger,
     val types: Types,
     val elements: Elements,
-    val configManager: ConfigManager
-) {
+    asyncable: Asyncable
+) : Asyncable by asyncable {
 
-    fun writeModels(models: List<ModelViewInfo>) {
-        for (modelInfo in models) {
-            try {
-                modelWriter.generateClassForModel(modelInfo, generateBuilderHook(modelInfo))
-            } catch (e: Exception) {
-                errorLogger.logError(
-                    EpoxyProcessorException(e, "Error generating model view classes")
-                )
-            }
+    suspend fun writeModels(
+        models: List<ModelViewInfo>,
+        originatingConfigElements: List<Element>
+    ) {
+        models.forEach("Write model view classes") { modelInfo ->
+            modelWriter.generateClassForModel(
+                modelInfo,
+                originatingElements = originatingConfigElements + modelInfo.originatingElements(),
+                builderHooks = generateBuilderHook(modelInfo)
+            )
         }
     }
 

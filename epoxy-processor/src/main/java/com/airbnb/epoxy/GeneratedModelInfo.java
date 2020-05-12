@@ -35,7 +35,7 @@ import androidx.annotation.Nullable;
 import static com.airbnb.epoxy.Utils.buildEpoxyException;
 import static com.airbnb.epoxy.Utils.isSubtypeOfType;
 
-abstract class GeneratedModelInfo {
+public abstract class GeneratedModelInfo {
   private static final String RESET_METHOD = "reset";
   public static final String GENERATED_CLASS_NAME_SUFFIX = "_";
   public static final String GENERATED_MODEL_SUFFIX = "Model" + GENERATED_CLASS_NAME_SUFFIX;
@@ -70,6 +70,18 @@ abstract class GeneratedModelInfo {
    * instead of via xml layout resource inflation.
    */
   Size layoutParams = Size.NONE;
+
+  /**
+   * The elements that influence the generation of this model.
+   * eg base model class for @EpoxyModelClass, view class for @ModelView, etc
+   */
+  public List<Element> originatingElements() {
+    if (styleBuilderInfo != null) {
+      return Collections.singletonList(styleBuilderInfo.getStyleBuilderElement());
+    }
+
+    return Collections.emptyList();
+  }
 
   /**
    * Get information about constructors of the original class so we can duplicate them in the
@@ -114,8 +126,10 @@ abstract class GeneratedModelInfo {
             if (methodName.equals(RESET_METHOD) && params.isEmpty()) {
               continue;
             }
+            boolean isEpoxyAttribute = castedSubElement.getAnnotation(EpoxyAttribute.class) != null;
             methodsReturningClassType.add(new MethodInfo(methodName, modifiers,
-                buildParamSpecs(params), castedSubElement.isVarArgs()));
+                buildParamSpecs(params), castedSubElement.isVarArgs(), isEpoxyAttribute,
+                castedSubElement));
           }
         }
       }
@@ -138,11 +152,11 @@ abstract class GeneratedModelInfo {
     return result;
   }
 
-  void addAttribute(AttributeInfo attributeInfo) {
+  synchronized void addAttribute(AttributeInfo attributeInfo) {
     addAttributes(Collections.singletonList(attributeInfo));
   }
 
-  void addAttributes(Collection<AttributeInfo> attributesToAdd) {
+  synchronized void addAttributes(Collection<AttributeInfo> attributesToAdd) {
     removeMethodIfDuplicatedBySetter(attributesToAdd);
     for (AttributeInfo info : attributesToAdd) {
       int existingIndex = attributeInfo.indexOf(info);
@@ -166,10 +180,10 @@ abstract class GeneratedModelInfo {
       Iterator<MethodInfo> iterator = methodsReturningClassType.iterator();
       while (iterator.hasNext()) {
         MethodInfo methodInfo = iterator.next();
-        if (methodInfo.name.equals(attributeInfo.getFieldName())
+        if (methodInfo.getName().equals(attributeInfo.getFieldName())
             // checking for overloads
-            && methodInfo.params.size() == 1
-            && methodInfo.params.get(0).type.equals(attributeInfo.getTypeName())) {
+            && methodInfo.getParams().size() == 1
+            && methodInfo.getParams().get(0).type.equals(attributeInfo.getTypeName())) {
           iterator.remove();
         }
       }
@@ -263,53 +277,6 @@ abstract class GeneratedModelInfo {
     }
   }
 
-  static class MethodInfo {
-    final String name;
-    final Set<Modifier> modifiers;
-    final List<ParameterSpec> params;
-    final boolean varargs;
-
-    MethodInfo(String name, Set<Modifier> modifiers, List<ParameterSpec> params,
-        boolean varargs) {
-      this.name = name;
-      this.modifiers = modifiers;
-      this.params = params;
-      this.varargs = varargs;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-
-      MethodInfo that = (MethodInfo) o;
-
-      if (varargs != that.varargs) {
-        return false;
-      }
-      if (name != null ? !name.equals(that.name) : that.name != null) {
-        return false;
-      }
-      if (modifiers != null ? !modifiers.equals(that.modifiers) : that.modifiers != null) {
-        return false;
-      }
-      return params != null ? params.equals(that.params) : that.params == null;
-    }
-
-    @Override
-    public int hashCode() {
-      int result = name != null ? name.hashCode() : 0;
-      result = 31 * result + (modifiers != null ? modifiers.hashCode() : 0);
-      result = 31 * result + (params != null ? params.hashCode() : 0);
-      result = 31 * result + (varargs ? 1 : 0);
-      return result;
-    }
-  }
-
   @Override
   public String toString() {
     return "GeneratedModelInfo{"
@@ -380,7 +347,7 @@ abstract class GeneratedModelInfo {
     return false;
   }
 
-  static class AttributeGroup {
+  public static class AttributeGroup {
     final String name;
     final List<AttributeInfo> attributes;
     final boolean isRequired;

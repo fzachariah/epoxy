@@ -13,25 +13,26 @@ class PackageModelViewSettings(
     // The R class may be R or R2. We create the class name again to make sure we don't use R2.
     val rClass: ClassName = ClassName.get(rClassName.packageName(), "R", "layout")
     val layoutName: String = annotation.defaultLayoutPattern
-    val defaultBaseModel: TypeMirror? = getDefaultBaseModel(annotation)
     val includeAlternateLayouts: Boolean = annotation.useLayoutOverloads
     val generatedModelSuffix: String = annotation.generatedModelSuffix
 
-    private fun getDefaultBaseModel(annotation: PackageModelViewConfig): TypeMirror? {
-        var defaultBaseModel: TypeMirror? = null
-        try {
-            annotation.defaultBaseModelClass // this should throw
+    val defaultBaseModel: TypeMirror? by lazy {
+
+        val defaultBaseModel: TypeMirror? = try {
+            // this should throw
+            annotation.defaultBaseModelClass
+            null
         } catch (mte: MirroredTypeException) {
-            defaultBaseModel = mte.typeMirror
+            mte.typeMirror
         }
 
-        if (defaultBaseModel != null &&
-                defaultBaseModel.toString() == Void::class.java.canonicalName) {
+        if (defaultBaseModel?.isVoidClass() == true) {
             // The default value of the annotation parameter is Void.class to signal that the user
             // does not want to provide a custom base class
-            defaultBaseModel = null
+            null
+        } else {
+            defaultBaseModel
         }
-        return defaultBaseModel
     }
 
     fun getNameForView(viewElement: TypeElement): ResourceValue {

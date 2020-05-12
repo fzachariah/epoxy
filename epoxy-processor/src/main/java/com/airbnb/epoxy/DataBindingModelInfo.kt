@@ -3,7 +3,9 @@ package com.airbnb.epoxy
 import com.airbnb.epoxy.ClassNames.EPOXY_DATA_BINDING_HOLDER
 import com.airbnb.epoxy.ClassNames.EPOXY_DATA_BINDING_MODEL
 import com.airbnb.epoxy.Utils.getElementByName
+import com.airbnb.epoxy.Utils.getElementByNameNullable
 import com.squareup.javapoet.ClassName
+import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
 import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
@@ -14,15 +16,15 @@ internal class DataBindingModelInfo(
     val layoutResource: ResourceValue,
     val moduleName: String,
     private val layoutPrefix: String = "",
-    val enableDoNotHash: Boolean
+    val enableDoNotHash: Boolean,
+    val annotatedElement: Element
 ) : GeneratedModelInfo() {
     private val dataBindingClassName: ClassName
 
     private val dataBindingClassElement: TypeElement?
-        get() = getElementByName(dataBindingClassName, elementUtils, typeUtils)
+        get() = getElementByNameNullable(dataBindingClassName, elementUtils, typeUtils)
 
     init {
-
         dataBindingClassName = getDataBindingClassNameForResource(layoutResource, moduleName)
 
         superClassElement = Utils.getElementByName(
@@ -41,12 +43,12 @@ internal class DataBindingModelInfo(
     /**
      * Look up the DataBinding class generated for this model's layout file and parse the attributes
      * for it.
-     * @return True if the DataBinding class exists, false otherwise.
+     * @return the databinding element if it was successfully parsed, null otherwise.
      */
-    fun parseDataBindingClass(): Boolean {
+    fun parseDataBindingClass(): TypeElement? {
         // This databinding class won't exist until the second round of annotation processing since
         // it is generated in the first round.
-        val dataBindingClassElement = this.dataBindingClassElement ?: return false
+        val dataBindingClassElement = this.dataBindingClassElement ?: return null
         val hashCodeValidator = HashCodeValidator(typeUtils, elementUtils)
 
         dataBindingClassElement.executableElements()
@@ -59,7 +61,7 @@ internal class DataBindingModelInfo(
                 addAttributes(it)
             }
 
-        return true
+        return dataBindingClassElement
     }
 
     private fun getDataBindingClassNameForResource(
@@ -76,7 +78,7 @@ internal class DataBindingModelInfo(
             .removePrefix(layoutPrefix)
             .toUpperCamelCase()
             .plus(BINDING_SUFFIX)
-            .plus(GeneratedModelInfo.GENERATED_MODEL_SUFFIX)
+            .plus(GENERATED_MODEL_SUFFIX)
 
         return ClassName.get(moduleName, modelName)
     }
@@ -91,4 +93,8 @@ internal class DataBindingModelInfo(
             "lifecycleOwner"
         )
     }
+
+    // The annotation that specifics the
+    override fun originatingElements() =
+        super.originatingElements() + listOfNotNull(annotatedElement, dataBindingClassElement)
 }

@@ -15,7 +15,7 @@ internal class BasicGeneratedModelInfo(
     private val elements: Elements,
     types: Types,
     superClassElement: TypeElement,
-    errorLogger: ErrorLogger
+    logger: Logger
 ) : GeneratedModelInfo() {
 
     val boundObjectTypeElement: TypeElement?
@@ -43,7 +43,7 @@ internal class BasicGeneratedModelInfo(
 
         var boundObjectTypeMirror = getEpoxyObjectType(superClassElement, types)
         if (boundObjectTypeMirror == null) {
-            errorLogger
+            logger
                 .logError(
                     "Epoxy model type could not be found. (class: %s)",
                     superClassElement.simpleName
@@ -90,4 +90,7 @@ internal class BasicGeneratedModelInfo(
             className + GeneratedModelInfo.GENERATED_CLASS_NAME_SUFFIX
         )
     }
+
+    // This is the base model class that the generated model inherits from
+    override fun originatingElements() = super.originatingElements() + listOf(superClassElement)
 }

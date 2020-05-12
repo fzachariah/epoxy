@@ -6,8 +6,10 @@ import com.squareup.javapoet.MethodSpec
 import com.squareup.javapoet.ParameterSpec
 import com.squareup.javapoet.ParameterizedTypeName
 import com.squareup.javapoet.TypeName
+import java.util.concurrent.ConcurrentHashMap
 import javax.annotation.processing.Filer
 import javax.lang.model.element.Modifier
+import javax.lang.model.element.TypeElement
 import javax.lang.model.util.Types
 
 const val MODEL_BUILDER_INTERFACE_SUFFIX = "Builder"
@@ -19,12 +21,17 @@ const val MODEL_BUILDER_INTERFACE_SUFFIX = "Builder"
  *
  * We can also hide the setters that are legacy from usage with EpoxyAdapter.
  */
-internal class ModelBuilderInterfaceWriter(
+class ModelBuilderInterfaceWriter(
     private val filer: Filer,
     val types: Types
 ) {
 
-    private val viewInterfacesToGenerate = mutableMapOf<ClassName, Set<MethodDetails>>()
+    private val viewInterfacesToGenerate = ConcurrentHashMap<ClassName, InterfaceDetails>()
+
+    data class InterfaceDetails(
+        val implementingViews: Set<TypeElement> = emptySet(),
+        val methodsOnInterface: Set<MethodDetails> = emptySet()
+    )
 
     /** These setters can't be used with models in an EpoxyController, they were made for EpoxyAdapter. */
     private val blackListedLegacySetterNames = setOf("hide", "show", "reset")
@@ -39,27 +46,39 @@ internal class ModelBuilderInterfaceWriter(
             val interfaceMethods = getInterfaceMethods(modelInfo, methods, interfaceName)
 
             if (modelInfo is ModelViewInfo) {
-                modelInfo.generatedViewInterfaceNames.forEach {
-                    addSuperinterface(it)
+                modelInfo.generatedViewInterfaceNames.forEach { viewInterface ->
+                    addSuperinterface(viewInterface)
 
                     // Store the subset of methods common to all interface implementations so we
                     // can generate the interface with the proper methods later
-                    viewInterfacesToGenerate
-                        .putOrMerge(
-                            it,
-                            interfaceMethods.map { MethodDetails(it) }.toSet()
-                        ) { set1, set2 -> set1 intersect set2 }
+                    synchronized(viewInterfacesToGenerate) {
+                        viewInterfacesToGenerate.putOrMerge(
+                            viewInterface,
+                            InterfaceDetails(
+                                implementingViews = setOf(modelInfo.viewElement),
+                                methodsOnInterface = interfaceMethods.map { MethodDetails(it) }
+                                    .toSet()
+                            )
+                        ) { details1, details2 ->
+                            InterfaceDetails(
+                                implementingViews = details1.implementingViews + details2.implementingViews,
+                                methodsOnInterface = details1.methodsOnInterface intersect details2.methodsOnInterface
+                            )
+                        }
+                    }
                 }
             }
 
             addModifiers(Modifier.PUBLIC)
             addTypeVariables(modelInfo.typeVariables)
             addMethods(interfaceMethods)
+
+            addOriginatingElement(modelInfo.superClassElement)
         }
 
         JavaFile.builder(modelInfo.generatedClassName.packageName(), modelInterface)
             .build()
-            .writeTo(filer)
+            .writeSynchronized(filer)
 
         return getBuilderInterfaceTypeName(modelInfo)
     }
@@ -70,6 +89,7 @@ internal class ModelBuilderInterfaceWriter(
         interfaceName: ClassName
     ): List<MethodSpec> {
         return methods
+            .asSequence()
             .filter {
                 !it.hasModifier(Modifier.STATIC)
             }
@@ -89,8 +109,9 @@ internal class ModelBuilderInterfaceWriter(
                     // that subclasses of the model can also implement this interface
                     returns = interfaceName,
                     additionalModifiers = listOf(Modifier.ABSTRACT)
-                ) {}
+                )
             }
+            .toList()
     }
 
     /**
@@ -102,24 +123,35 @@ internal class ModelBuilderInterfaceWriter(
         // 1. Easily inherit TextProp and other overloads
         // 2. Inherit base model props like id
         // 3. Don't have to figure out if a prop matches an interface method exactly (eg the model method is "clickable" but the interface method is "setClickable")
-        // This means that the generated interface won't necesarily map exactly to the original view interface
+        // This means that the generated interface won't necessarily map exactly to the original view interface
         // It just represents the set of props shared by all models with that view interface, which should be all we need in practice.
 
-        for ((interfaceName, methodsToWrite) in viewInterfacesToGenerate) {
+        for ((interfaceName, details) in viewInterfacesToGenerate) {
 
             val interfaceSpec = buildInterface(interfaceName) {
                 addModifiers(Modifier.PUBLIC)
 
-                addMethods(methodsToWrite.map {
+                addMethods(details.methodsOnInterface.map {
                     it.methodSpec.copy {
                         returns(interfaceName)
                     }
                 })
+
+                details.implementingViews.forEach {
+                    // Note: If a brand new model view class is added that implements this interface
+                    // it could affect which methods are included on the generated interface since
+                    // we use an intersection. If that happens the incremental compiler may not know
+                    // that this file was affected, or the incremental annotation processing may
+                    // in some way not work correctly. We ignore this possible bug for now as it
+                    // would be very rare and there isn't much we can do without a large breaking
+                    // change to how the interface generation works.
+                    addOriginatingElement(it)
+                }
             }
 
             JavaFile.builder(interfaceName.packageName(), interfaceSpec)
                 .build()
-                .writeTo(filer)
+                .writeSynchronized(filer)
         }
 
         viewInterfacesToGenerate.clear()

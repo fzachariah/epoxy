@@ -82,20 +82,17 @@ internal fun tryAddStyleBuilderAttribute(
         "StyleBuilder"
     )
 
-    val styleBuilderElement = try {
-        getTypeMirror(styleBuilderClassName, elements, types)
-    } catch (e: IllegalArgumentException) {
-        return false
-    }
+    val styleBuilderElement =
+        getTypeMirrorNullable(styleBuilderClassName, elements, types) ?: return false
 
     styleableModel.setStyleable(
         ParisStyleAttributeInfo(
-            styleableModel,
-            elements,
-            types,
-            viewClass.packageName(),
-            styleBuilderClassName,
-            styleBuilderElement
+            modelInfo = styleableModel,
+            elements = elements,
+            types = types,
+            packageName = viewClass.packageName(),
+            styleBuilderClassName = styleBuilderClassName,
+            styleBuilderElement = types.asElement(styleBuilderElement)
         )
     )
     return true

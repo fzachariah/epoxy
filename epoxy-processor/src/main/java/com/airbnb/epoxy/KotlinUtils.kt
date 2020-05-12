@@ -1,8 +1,12 @@
 package com.airbnb.epoxy
 
 import com.airbnb.epoxy.Utils.getElementByName
+import com.airbnb.epoxy.Utils.getElementByNameNullable
 import com.squareup.javapoet.AnnotationSpec
 import com.squareup.javapoet.ClassName
+import com.squareup.javapoet.JavaFile
+import com.squareup.kotlinpoet.FileSpec
+import javax.annotation.processing.Filer
 import javax.lang.model.AnnotatedConstruct
 import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
@@ -13,15 +17,35 @@ import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
 import kotlin.reflect.KClass
 
+fun TypeMirror.isVoidClass(): Boolean = toString() == Void::class.java.canonicalName
+
+fun typeMirror(block: () -> KClass<*>): TypeMirror? {
+    // Unfortunately we have to do this weird try/catch to get the class type
+
+    return try {
+        // this should throw
+        block()
+        null
+    } catch (mte: MirroredTypeException) {
+        mte.typeMirror
+    }
+}
+
 fun getTypeMirror(
     className: ClassName,
     elements: Elements,
     types: Types
 ): TypeMirror {
-    val classElement = getElementByName(className, elements, types)
-        ?: throw IllegalArgumentException("Unknown class: " + className)
+    return getTypeMirrorNullable(className, elements, types)
+        ?: error("Unable to find type for $className")
+}
 
-    return classElement.asType()
+fun getTypeMirrorNullable(
+    className: ClassName,
+    elements: Elements,
+    types: Types
+): TypeMirror? {
+    return getElementByNameNullable(className, elements, types)?.asType()
 }
 
 fun getTypeMirror(
@@ -32,8 +56,10 @@ fun getTypeMirror(
 fun getTypeMirror(
     canonicalName: String,
     elements: Elements
-): TypeMirror? {
-    return try {
+): TypeMirror? = synchronized(elements) {
+    // This is synchronized because otherwise for some reason it can falsely return null
+    // when being accessed in parallel.
+    try {
         elements.getTypeElement(canonicalName)?.asType()
     } catch (mte: MirroredTypeException) {
         mte.typeMirror
@@ -43,15 +69,15 @@ fun getTypeMirror(
 fun Class<*>.asTypeElement(
     elements: Elements,
     types: Types
-): TypeElement? {
-    val typeMirror = getTypeMirror(this, elements) ?: return null
-    return types.asElement(typeMirror) as? TypeElement
+): TypeElement {
+    val typeMirror = getTypeMirror(this, elements)
+    return types.asElement(typeMirror) as TypeElement
 }
 
 fun KClass<*>.asTypeElement(
     elements: Elements,
     types: Types
-) = java.asTypeElement(elements, types)
+): TypeElement = java.asTypeElement(elements, types)
 
 fun String.toLowerCamelCase(): String {
 
@@ -225,4 +251,16 @@ fun TypeElement.findOverload(element: ExecutableElement, paramCount: Int): Execu
 
 fun TypeElement.hasOverload(element: ExecutableElement, paramCount: Int): Boolean {
     return findOverload(element, paramCount) != null
+}
+
+fun JavaFile.writeSynchronized(filer: Filer) = synchronized(filer) {
+    // JavacFiler does not properly synchronize its "Set<FileObject> fileObjectHistory"
+    // so parallel writing can throw concurrent modification exceptions.
+    writeTo(filer)
+}
+
+fun FileSpec.writeSynchronized(filer: Filer) = synchronized(filer) {
+    // JavacFiler does not properly synchronize its "Set<FileObject> fileObjectHistory"
+    // so parallel writing can throw concurrent modification exceptions.
+    writeTo(filer)
 }

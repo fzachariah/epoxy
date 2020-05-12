@@ -34,7 +34,7 @@ class BaseModelAttributeInfo extends AttributeInfo {
   protected Types typeUtils;
 
   BaseModelAttributeInfo(Element attribute, Types typeUtils, Elements elements,
-      ErrorLogger errorLogger) {
+      Logger logger) {
     this.typeUtils = typeUtils;
     this.setFieldName(attribute.getSimpleName().toString());
     setTypeMirror(attribute.asType());
@@ -50,7 +50,7 @@ class BaseModelAttributeInfo extends AttributeInfo {
     EpoxyAttribute annotation = attribute.getAnnotation(EpoxyAttribute.class);
 
     Set<Option> options = new HashSet<>(Arrays.asList(annotation.value()));
-    validateAnnotationOptions(errorLogger, annotation, options);
+    validateAnnotationOptions(logger, annotation, options);
 
     //noinspection deprecation
     setUseInHash(annotation.hash() && !options.contains(Option.DoNotHash));
@@ -63,7 +63,7 @@ class BaseModelAttributeInfo extends AttributeInfo {
 
     setPrivate(attribute.getModifiers().contains(PRIVATE));
     if (isPrivate()) {
-      findGetterAndSetterForPrivateField(errorLogger);
+      findGetterAndSetterForPrivateField(logger);
     }
 
     buildAnnotationLists(attribute.getAnnotationMirrors());
@@ -95,11 +95,11 @@ class BaseModelAttributeInfo extends AttributeInfo {
         && hasSuperMethod((TypeElement) superClass, attribute);
   }
 
-  private void validateAnnotationOptions(ErrorLogger errorLogger, EpoxyAttribute annotation,
+  private void validateAnnotationOptions(Logger logger, EpoxyAttribute annotation,
       Set<Option> options) {
 
     if (options.contains(Option.IgnoreRequireHashCode) && options.contains(Option.DoNotHash)) {
-      errorLogger
+      logger
           .logError("Illegal to use both %s and %s options in an %s annotation. (%s#%s)",
               Option.DoNotHash,
               Option.IgnoreRequireHashCode,
@@ -111,7 +111,7 @@ class BaseModelAttributeInfo extends AttributeInfo {
     // Don't let legacy values be mixed with the new Options values
     if (!options.isEmpty()) {
       if (!annotation.hash()) {
-        errorLogger
+        logger
             .logError("Don't use hash=false in an %s if you are using options. Instead, use the"
                     + " %s option. (%s#%s)",
                 EpoxyAttribute.class.getSimpleName(),
@@ -121,7 +121,7 @@ class BaseModelAttributeInfo extends AttributeInfo {
       }
 
       if (!annotation.setter()) {
-        errorLogger
+        logger
             .logError("Don't use setter=false in an %s if you are using options. Instead, use the"
                     + " %s option. (%s#%s)",
                 EpoxyAttribute.class.getSimpleName(),
@@ -135,7 +135,7 @@ class BaseModelAttributeInfo extends AttributeInfo {
   /**
    * Checks if the given private field has getter and setter for access to it
    */
-  private void findGetterAndSetterForPrivateField(ErrorLogger errorLogger) {
+  private void findGetterAndSetterForPrivateField(Logger logger) {
     for (Element element : classElement.getEnclosedElements()) {
       if (element.getKind() == ElementKind.METHOD) {
         ExecutableElement method = (ExecutableElement) element;
@@ -165,7 +165,7 @@ class BaseModelAttributeInfo extends AttributeInfo {
       // some code that compiles in an ok manner (ie via direct field access)
       setPrivate(false);
 
-      errorLogger
+      logger
           .logError("%s annotations must not be on private fields"
                   + " without proper getter and setter methods. (class: %s, field: %s)",
               EpoxyAttribute.class.getSimpleName(),

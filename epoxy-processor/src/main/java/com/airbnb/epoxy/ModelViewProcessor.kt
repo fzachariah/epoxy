@@ -7,7 +7,6 @@ import com.airbnb.epoxy.Utils.isSubtypeOfType
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.HashSet
-import java.util.LinkedHashMap
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind
@@ -17,30 +16,29 @@ import javax.lang.model.element.Modifier.STATIC
 import javax.lang.model.element.TypeElement
 import javax.lang.model.element.VariableElement
 import javax.lang.model.type.TypeKind
-import javax.lang.model.util.Elements
-import javax.lang.model.util.Types
+import kotlin.reflect.KClass
+import net.ltgt.gradle.incap.IncrementalAnnotationProcessor
+import net.ltgt.gradle.incap.IncrementalAnnotationProcessorType
+import java.lang.IllegalStateException
+import java.util.concurrent.ConcurrentHashMap
 
-// TODO: (eli_hart 5/30/17) allow param counts > 0 in setters
-internal class ModelViewProcessor(
-    private val elements: Elements,
-    private val types: Types,
-    private val configManager: ConfigManager,
+@IncrementalAnnotationProcessor(IncrementalAnnotationProcessorType.AGGREGATING)
+class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
 
-    private val errorLogger: ErrorLogger,
-    private val modelWriter: GeneratedModelWriter,
-    private val resourceProcessor: ResourceProcessor
-) {
+    override val usesPackageEpoxyConfig: Boolean = false
+    override val usesModelViewConfig: Boolean = true
 
-    private val modelClassMap = LinkedHashMap<Element, ModelViewInfo>()
+    private val modelClassMap = ConcurrentHashMap<Element, ModelViewInfo>()
     private val styleableModelsToWrite = mutableListOf<ModelViewInfo>()
 
-    fun process(
-        roundEnv: RoundEnvironment,
-        otherGeneratedModels: List<GeneratedModelInfo>
-    ): Collection<GeneratedModelInfo> {
+    override fun supportedAnnotations(): List<KClass<*>> = super.supportedAnnotations() + listOf(
+        ModelView::class,
+        TextProp::class,
+        CallbackProp::class
+    )
 
-        modelClassMap.clear()
-
+    override suspend fun processRound(roundEnv: RoundEnvironment) {
+        super.processRound(roundEnv)
         processViewAnnotations(roundEnv)
 
         processSetterAnnotations(roundEnv)
@@ -58,38 +56,36 @@ internal class ModelViewProcessor(
         // Up until here our code generation has assumed that that all attributes in a group are
         // view attributes (and not attributes inherited from a base model class), so this should be
         // done after grouping attributes, and these attributes should not be grouped.
-        updatesViewsForInheritedBaseModelAttributes(otherGeneratedModels)
+        updatesViewsForInheritedBaseModelAttributes()
         addStyleAttributes()
 
         writeJava()
 
-        return modelClassMap.values
+        generatedModels.addAll(modelClassMap.values)
+        modelClassMap.clear()
     }
 
-    private fun processViewAnnotations(roundEnv: RoundEnvironment) {
-        for (viewElement in roundEnv.getElementsAnnotatedWith(ModelView::class.java)) {
-            try {
+    private suspend fun processViewAnnotations(roundEnv: RoundEnvironment) {
+        roundEnv.getElementsAnnotatedWith(ModelView::class.java)
+            .forEach("processViewAnnotations") { viewElement ->
                 if (!validateViewElement(viewElement)) {
-                    continue
+                    return@forEach
                 }
 
-                modelClassMap.put(
-                    viewElement,
-                    ModelViewInfo(
-                        viewElement as TypeElement, types, elements,
-                        errorLogger,
-                        configManager, resourceProcessor
-                    )
+                modelClassMap[viewElement] = ModelViewInfo(
+                    viewElement as TypeElement,
+                    typeUtils,
+                    elementUtils,
+                    logger,
+                    configManager,
+                    resourceProcessor
                 )
-            } catch (e: Exception) {
-                errorLogger.logError(e, "Error creating model view info classes.")
             }
-        }
     }
 
     private fun validateViewElement(viewElement: Element): Boolean {
         if (viewElement.kind != ElementKind.CLASS || viewElement !is TypeElement) {
-            errorLogger.logError(
+            logger.logError(
                 "${ModelView::class.java} annotations can only be on a class " +
                     "(element: ${viewElement.simpleName})"
             )
@@ -98,7 +94,7 @@ internal class ModelViewProcessor(
 
         val modifiers = viewElement.getModifiers()
         if (modifiers.contains(PRIVATE)) {
-            errorLogger.logError(
+            logger.logError(
                 "${ModelView::class.java} annotations must not be on private classes. " +
                     "(class: ${viewElement.getSimpleName()})"
             )
@@ -107,7 +103,7 @@ internal class ModelViewProcessor(
 
         // Nested classes must be static
         if (viewElement.nestingKind.isNested) {
-            errorLogger.logError(
+            logger.logError(
                 "Classes with ${ModelView::class.java} annotations cannot be nested. " +
                     "(class: ${viewElement.getSimpleName()})"
             )
@@ -115,7 +111,7 @@ internal class ModelViewProcessor(
         }
 
         if (!isSubtypeOfType(viewElement.asType(), Utils.ANDROID_VIEW_TYPE)) {
-            errorLogger.logError(
+            logger.logError(
                 "Classes with ${ModelView::class.java} annotations must extend " +
                     "android.view.View. (class: ${viewElement.getSimpleName()})"
             )
@@ -141,7 +137,7 @@ internal class ModelViewProcessor(
 
                 val info = getModelInfoForPropElement(prop)
                 if (info == null) {
-                    errorLogger.logError(
+                    logger.logError(
                         "${propAnnotation.simpleName} annotation can only be used in classes " +
                             "annotated with ${ModelView::class.java.simpleName} " +
                             "(${prop.enclosingElement.simpleName}#${prop.simpleName})"
@@ -197,7 +193,7 @@ internal class ModelViewProcessor(
                 var group: MutableList<AttributeInfo>? = attributeGroups[groupKey]
                 if (group == null) {
                     group = ArrayList()
-                    attributeGroups.put(groupKey, group)
+                    attributeGroups[groupKey] = group
                 }
 
                 group.add(attributeInfo)
@@ -207,7 +203,7 @@ internal class ModelViewProcessor(
                 attributeGroups[customGroup]?.let {
                     if (it.size == 1) {
                         val attribute = it[0] as ViewAttributeInfo
-                        errorLogger
+                        logger
                             .logError(
                                 "Only one setter was included in the custom group " +
                                     "'$customGroup' at ${viewInfo.viewElement.simpleName}#" +
@@ -222,7 +218,7 @@ internal class ModelViewProcessor(
                 try {
                     viewInfo.addAttributeGroup(key, value)
                 } catch (e: EpoxyProcessorException) {
-                    errorLogger.logError(e)
+                    logger.logError(e)
                 }
             }
         }
@@ -236,7 +232,7 @@ internal class ModelViewProcessor(
             is ExecutableElement -> validateExecutableElement(prop, propAnnotation, 1)
             is VariableElement -> validateVariableElement(prop, propAnnotation)
             else -> {
-                errorLogger.logError(
+                logger.logError(
                     "%s annotations can only be on a method or a field(element: %s)",
                     propAnnotation,
                     prop.simpleName
@@ -247,12 +243,12 @@ internal class ModelViewProcessor(
     }
 
     private fun validateVariableElement(field: Element, annotationClass: Class<*>): Boolean {
-        var isValidField = field.kind == ElementKind.FIELD &&
+        val isValidField = field.kind == ElementKind.FIELD &&
             !field.modifiers.contains(PRIVATE) &&
             !field.modifiers.contains(STATIC)
 
         if (!isValidField) {
-            errorLogger.logError(
+            logger.logError(
                 "Field annotated with %s must not be static or private (field: %s)",
                 annotationClass, field
             )
@@ -267,7 +263,7 @@ internal class ModelViewProcessor(
         checkTypeParameters: List<TypeKind>? = null
     ): Boolean {
         if (element !is ExecutableElement) {
-            errorLogger.logError(
+            logger.logError(
                 "%s annotations can only be on a method (element: %s)",
                 annotationClass::class.java.simpleName,
                 element.simpleName
@@ -276,7 +272,7 @@ internal class ModelViewProcessor(
         }
 
         if (element.parameters.size != paramCount) {
-            errorLogger.logError(
+            logger.logError(
                 "Methods annotated with %s must have exactly %s parameter (method: %s)",
                 annotationClass::class.java.simpleName, paramCount, element.getSimpleName()
             )
@@ -290,7 +286,7 @@ internal class ModelViewProcessor(
                 hasErrors = hasErrors || parameter.asType().kind != expectedTypeParameters[i]
             }
             if (hasErrors) {
-                errorLogger.logError(
+                logger.logError(
                     "Methods annotated with %s must have parameter types %s, " +
                         "found: %s (method: %s)",
                     annotationClass::class.java.simpleName,
@@ -303,7 +299,7 @@ internal class ModelViewProcessor(
 
         val modifiers = element.getModifiers()
         if (modifiers.contains(STATIC) || modifiers.contains(PRIVATE)) {
-            errorLogger.logError(
+            logger.logError(
                 "Methods annotated with %s cannot be private or static (method: %s)",
                 annotationClass::class.java.simpleName, element.getSimpleName()
             )
@@ -321,7 +317,7 @@ internal class ModelViewProcessor(
 
             val info = getModelInfoForPropElement(recycleMethod)
             if (info == null) {
-                errorLogger.logError(
+                logger.logError(
                     "%s annotation can only be used in classes annotated with %s",
                     OnViewRecycled::class.java, ModelView::class.java
                 )
@@ -343,7 +339,7 @@ internal class ModelViewProcessor(
 
             val info = getModelInfoForPropElement(visibilityMethod)
             if (info == null) {
-                errorLogger.logError(
+                logger.logError(
                     "%s annotation can only be used in classes annotated with %s",
                     OnVisibilityStateChanged::class.java, ModelView::class.java
                 )
@@ -365,7 +361,7 @@ internal class ModelViewProcessor(
 
             val info = getModelInfoForPropElement(visibilityMethod)
             if (info == null) {
-                errorLogger.logError(
+                logger.logError(
                     "%s annotation can only be used in classes annotated with %s",
                     OnVisibilityChanged::class.java, ModelView::class.java
                 )
@@ -384,7 +380,7 @@ internal class ModelViewProcessor(
 
             val info = getModelInfoForPropElement(afterPropsMethod)
             if (info == null) {
-                errorLogger.logError(
+                logger.logError(
                     "%s annotation can only be used in classes annotated with %s",
                     AfterPropsSet::class.java, ModelView::class.java
                 )
@@ -406,10 +402,10 @@ internal class ModelViewProcessor(
             // This approach lets us capture views that we've already processed as well as views
             // in other libraries that we wouldn't have otherwise processed.
 
-            view.viewElement.iterateSuperClasses(types) { superViewElement ->
+            view.viewElement.iterateSuperClasses(typeUtils) { superViewElement ->
                 val samePackage = belongToTheSamePackage(
                     view.viewElement, superViewElement,
-                    elements
+                    elementUtils
                 )
 
                 fun forEachElementWithAnnotation(
@@ -466,27 +462,30 @@ internal class ModelViewProcessor(
     ): Boolean = annotations.any { element.getAnnotation(it) != null }
 
     /**
-     * If a view defines a base model that it's generated model should extend we need to check if that
+     * If a view defines a base model that its generated model should extend we need to check if that
      * base model has [com.airbnb.epoxy.EpoxyAttribute] fields and include those in our model if
      * so.
      */
-    private fun updatesViewsForInheritedBaseModelAttributes(
-        otherGeneratedModels: List<GeneratedModelInfo>
-    ) {
-
+    private fun updatesViewsForInheritedBaseModelAttributes() {
         for (modelViewInfo in modelClassMap.values) {
-            otherGeneratedModels
-                .filter {
-                    isSubtype(modelViewInfo.superClassElement, it.superClassElement, types)
-                }
-                .forEach { modelViewInfo.addAttributes(it.attributeInfo) }
+            // Skip generated model super classes since it will already contain all of the functions
+            // necessary for included attributes, and duplicating them is a waste.
+            if (modelViewInfo.isSuperClassAlsoGenerated) continue
+
+            EpoxyProcessor.getInheritedEpoxyAttributes(
+                modelViewInfo.superClassElement.asType(),
+                modelViewInfo.generatedClassName.packageName(),
+                typeUtils,
+                elementUtils,
+                logger
+            ).let { modelViewInfo.addAttributes(it) }
         }
     }
 
     private fun addStyleAttributes() {
         modelClassMap
             .values
-            .filter { it.viewElement.hasStyleableAnnotation(elements) }
+            .filter { it.viewElement.hasStyleableAnnotation(elementUtils) }
             .also { styleableModelsToWrite.addAll(it) }
     }
 
@@ -505,29 +504,27 @@ internal class ModelViewProcessor(
             checkTypeParameters = listOf(TypeKind.FLOAT, TypeKind.FLOAT, TypeKind.INT, TypeKind.INT)
         )
 
-    private fun writeJava() {
-        val modelsToWrite = mutableListOf<ModelViewInfo>()
-        modelsToWrite.addAll(modelClassMap.values)
+    private suspend fun writeJava() {
+        val modelsToWrite = modelClassMap.values.toMutableList()
         modelsToWrite.removeAll(styleableModelsToWrite)
 
-        styleableModelsToWrite.forEach {
-            if (tryAddStyleBuilderAttribute(it, elements, types)) {
-                modelsToWrite.add(it)
+        styleableModelsToWrite
+            .filter {
+                tryAddStyleBuilderAttribute(it, elementUtils, typeUtils)
+            }.let {
+                modelsToWrite.addAll(it)
+                styleableModelsToWrite.removeAll(it)
             }
-        }
 
-        styleableModelsToWrite.removeAll(modelsToWrite)
 
-        ModelViewWriter(modelWriter, errorLogger, types, elements, configManager)
-            .writeModels(modelsToWrite)
+        ModelViewWriter(modelWriter, typeUtils, elementUtils, this)
+            .writeModels(modelsToWrite, originatingConfigElements())
 
         if (styleableModelsToWrite.isEmpty()) {
             // Make sure all models have been processed and written before we generate interface information
             modelWriter.writeFilesForViewInterfaces()
         }
     }
-
-    fun hasModelsToWrite() = styleableModelsToWrite.isNotEmpty()
 
     private fun getModelInfoForPropElement(element: Element): ModelViewInfo? =
         element.enclosingElement?.let { modelClassMap[it] }

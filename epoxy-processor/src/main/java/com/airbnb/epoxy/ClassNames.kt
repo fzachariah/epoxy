@@ -6,8 +6,6 @@ object ClassNames {
 
     private const val PKG_EPOXY = "com.airbnb.epoxy"
     private const val PKG_PARIS = "com.airbnb.paris"
-    private const val PKG_LITHO = "com.facebook.litho"
-    private const val PKG_LITHO_ANNOTATIONS = "com.facebook.litho.annotations"
     private const val PKG_ANDROID = "android"
     private const val PKG_ANDROID_CONTENT = "android.content"
     private const val PKG_ANDROID_VIEW = "android.view"
@@ -26,19 +24,6 @@ object ClassNames {
         get(PKG_ANDROID_VIEW, "ViewGroup", "MarginLayoutParams")!!
     @JvmField
     val ANDROID_R = get(PKG_ANDROID, "R")!!
-
-    @JvmField
-    val LITHO_COMPONENT = get(PKG_LITHO, "Component")!!
-    @JvmField
-    val LITHO_COMPONENT_CONTEXT = get(PKG_LITHO, "ComponentContext")!!
-    @JvmField
-    val LITHO_ANNOTATION_LAYOUT_SPEC = get(PKG_LITHO_ANNOTATIONS, "LayoutSpec")!!
-    @JvmField
-    val LITHO_ANNOTATION_PROP = get(PKG_LITHO_ANNOTATIONS, "Prop")!!
-    @JvmField
-    val EPOXY_LITHO_MODEL = get(PKG_EPOXY, "EpoxyLithoModel")!!
-    @JvmField
-    val LITHO_VIEW = get(PKG_LITHO, "LithoView")!!
 
     @JvmField
     val EPOXY_MODEL_UNTYPED = get(PKG_EPOXY, "EpoxyModel")!!

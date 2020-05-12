@@ -21,11 +21,11 @@ import kotlinx.metadata.KmType
 import kotlinx.metadata.jvm.KotlinClassHeader
 import kotlinx.metadata.jvm.KotlinClassMetadata
 
-internal class ModelViewInfo(
+class ModelViewInfo(
     val viewElement: TypeElement,
     val typeUtils: Types,
     val elements: Elements,
-    val errorLogger: ErrorLogger,
+    val logger: Logger,
     private val configManager: ConfigManager,
     private val resourceProcessor: ResourceProcessor
 ) : GeneratedModelInfo() {
@@ -124,31 +124,20 @@ internal class ModelViewInfo(
     }
 
     private fun lookUpSuperClassElement(): TypeElement {
-        val defaultSuper = Utils.getElementByName(
-            ClassNames.EPOXY_MODEL_UNTYPED,
-            elements, typeUtils
-        ) as TypeElement
-
-        // Unfortunately we have to do this weird try/catch to get the class type
-        var classToExtend: TypeMirror? = null
-        try {
-            viewAnnotation.baseModelClass // this should throw
-        } catch (mte: MirroredTypeException) {
-            classToExtend = mte.typeMirror
+        val defaultSuper by lazy {
+            Utils.getElementByName(
+                ClassNames.EPOXY_MODEL_UNTYPED,
+                elements, typeUtils
+            )
         }
 
-        if (classToExtend == null || classToExtend.toString() == Void::class.java.canonicalName) {
-
-            val defaultBaseModel = configManager.getDefaultBaseModel(viewElement)
-            if (defaultBaseModel != null) {
-                classToExtend = defaultBaseModel
-            } else {
-                return defaultSuper
-            }
-        }
+        val classToExtend: TypeMirror = typeMirror { viewAnnotation.baseModelClass }
+            ?.takeIf { !it.isVoidClass() }
+            ?: configManager.getDefaultBaseModel(viewElement)
+            ?: return defaultSuper
 
         if (!isEpoxyModel(classToExtend)) {
-            errorLogger
+            logger
                 .logError(
                     "The base model provided to an %s must extend EpoxyModel, but was %s (%s).",
                     ModelView::class.java.simpleName, classToExtend, viewElement.simpleName
@@ -157,7 +146,7 @@ internal class ModelViewInfo(
         }
 
         if (!validateSuperClassIsTypedCorrectly(classToExtend)) {
-            errorLogger.logError(
+            logger.logError(
                 "The base model provided to an %s must have View as its type (%s).",
                 ModelView::class.java.simpleName, viewElement.simpleName
             )
@@ -219,7 +208,7 @@ internal class ModelViewInfo(
             viewElement.hasOverload(prop, 0)
 
         if (hasDefaultKotlinValue && !hasNoArgEquivalent) {
-            errorLogger.logError(
+            logger.logError(
                 "Model view function with default argument must be annotated with @JvmOverloads: %s#%s",
                 viewElement.simpleName,
                 prop.simpleName
@@ -233,7 +222,7 @@ internal class ModelViewInfo(
                 viewAttributeElement = prop,
                 types = typeUtils,
                 elements = elements,
-                errorLogger = errorLogger,
+                logger = logger,
                 resourceProcessor = resourceProcessor
             )
         )
@@ -247,7 +236,7 @@ internal class ModelViewInfo(
                 viewAttributeElement = prop,
                 types = typeUtils,
                 elements = elements,
-                errorLogger = errorLogger,
+                logger = logger,
                 resourceProcessor = resourceProcessor
             )
         )
@@ -294,7 +283,7 @@ internal class ModelViewInfo(
             return modelViewConfig.getNameForView(viewElement)
         }
 
-        errorLogger.logError("Unable to get layout resource for view %s", viewElement.simpleName)
+        logger.logError("Unable to get layout resource for view %s", viewElement.simpleName)
         return ResourceValue(0)
     }
 
@@ -439,4 +428,6 @@ internal class ModelViewInfo(
             }
         }
     }
+
+    override fun originatingElements() = super.originatingElements() + listOf(viewElement)
 }

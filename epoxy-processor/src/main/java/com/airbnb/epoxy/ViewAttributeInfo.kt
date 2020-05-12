@@ -34,13 +34,13 @@ sealed class ViewAttributeType {
     object Field : ViewAttributeType()
 }
 
-internal class ViewAttributeInfo(
+class ViewAttributeInfo(
     private val modelInfo: ModelViewInfo,
     val hasDefaultKotlinValue: Boolean,
     viewAttributeElement: Element,
     types: Types,
     elements: Elements,
-    errorLogger: ErrorLogger,
+    logger: Logger,
     resourceProcessor: ResourceProcessor
 ) : AttributeInfo() {
     val propName: String
@@ -62,7 +62,7 @@ internal class ViewAttributeInfo(
             else -> throw IllegalStateException("Unsuppported element type $viewAttributeElement")
         }
 
-        viewAttributeTypeName = getViewAttributeType(viewAttributeElement, errorLogger)
+        viewAttributeTypeName = getViewAttributeType(viewAttributeElement, logger)
 
         groupKey = ""
         var defaultConstant = ""
@@ -87,7 +87,7 @@ internal class ViewAttributeInfo(
             if (isMarkedNullable(param)) {
                 options.add(Option.NullOnRecycle)
             } else {
-                errorLogger.logError(
+                logger.logError(
                     "Setters with %s must be marked Nullable",
                     CallbackProp::class.java.simpleName
                 )
@@ -112,7 +112,7 @@ internal class ViewAttributeInfo(
         propName = removeSetPrefix(viewAttributeName)
         typeMirror = param.asType()
 
-        assignDefaultValue(defaultConstant, errorLogger, types)
+        assignDefaultValue(defaultConstant, logger, types)
         assignNullability(param, typeMirror)
 
         // TODO: (eli_hart 9/26/17) Get the javadoc on the super method if this setter overrides
@@ -123,7 +123,7 @@ internal class ViewAttributeInfo(
             modelInfo.viewElement, typeMirror, viewAttributeName
         )
 
-        validatePropOptions(errorLogger, options, types, elements)
+        validatePropOptions(logger, options, types, elements)
 
         if (generateStringOverloads) {
             typeMirror = getTypeMirror(
@@ -171,12 +171,12 @@ internal class ViewAttributeInfo(
 
     private fun getViewAttributeType(
         element: Element,
-        errorLogger: ErrorLogger
-    ): ViewAttributeType? = when {
-        element.kind == ElementKind.METHOD -> ViewAttributeType.Method
-        element.kind == ElementKind.FIELD -> ViewAttributeType.Field
+        logger: Logger
+    ): ViewAttributeType? = when (element.kind) {
+        ElementKind.METHOD -> ViewAttributeType.Method
+        ElementKind.FIELD -> ViewAttributeType.Field
         else -> {
-            errorLogger.logError(
+            logger.logError(
                 "Element must be either method or field (element: %s)",
                 element
             )
@@ -213,13 +213,13 @@ internal class ViewAttributeInfo(
 
     private fun assignDefaultValue(
         defaultConstant: String,
-        errorLogger: ErrorLogger,
+        logger: Logger,
         types: Types
     ) {
 
         if (hasDefaultKotlinValue) {
             if (defaultConstant.isNotEmpty()) {
-                errorLogger.logError(
+                logger.logError(
                     "Default set via both kotlin parameter and annotation constant. Use only one. (%s#%s)",
                     modelInfo.viewElement.simpleName,
                     viewAttributeName
@@ -239,7 +239,7 @@ internal class ViewAttributeInfo(
         var viewClass: TypeElement? = modelInfo.viewElement
         while (viewClass != null) {
             for (element in viewClass.enclosedElements) {
-                if (checkElementForConstant(element, defaultConstant, types, errorLogger)) {
+                if (checkElementForConstant(element, defaultConstant, types, logger)) {
                     return
                 }
             }
@@ -247,7 +247,7 @@ internal class ViewAttributeInfo(
             viewClass = viewClass.getParentClassElement(types)
         }
 
-        errorLogger.logError(
+        logger.logError(
             "The default value for (%s#%s) could not be found. Expected a constant named " +
                 "'%s' in the " + "view class.",
             modelInfo.viewElement.simpleName, viewAttributeName, defaultConstant
@@ -258,7 +258,7 @@ internal class ViewAttributeInfo(
         element: Element,
         constantName: String,
         types: Types,
-        errorLogger: ErrorLogger
+        logger: Logger
     ): Boolean {
         if (element.kind == ElementKind.FIELD && element.simpleName.toString() == constantName) {
 
@@ -268,7 +268,7 @@ internal class ViewAttributeInfo(
                 modifiers.contains(Modifier.PRIVATE)
             ) {
 
-                errorLogger.logError(
+                logger.logError(
                     "Default values for view props must be static, final, and not private. " +
                         "(%s#%s)",
                     modelInfo.viewElement.simpleName, viewAttributeName
@@ -278,7 +278,7 @@ internal class ViewAttributeInfo(
 
             // Make sure that the type of the default value is a valid type for the prop
             if (!types.isAssignable(element.asType(), typeMirror)) {
-                errorLogger.logError(
+                logger.logError(
                     "The default value for (%s#%s) must be a %s.",
                     modelInfo.viewElement.simpleName, viewAttributeName, typeMirror
                 )
@@ -299,13 +299,13 @@ internal class ViewAttributeInfo(
     }
 
     private fun validatePropOptions(
-        errorLogger: ErrorLogger,
+        logger: Logger,
         options: Set<Option>,
         types: Types,
         elements: Elements
     ) {
         if (options.contains(Option.IgnoreRequireHashCode) && options.contains(Option.DoNotHash)) {
-            errorLogger
+            logger
                 .logError(
                     "Illegal to use both %s and %s options in an %s annotation. (%s#%s)",
                     Option.DoNotHash, Option.IgnoreRequireHashCode,
@@ -317,7 +317,7 @@ internal class ViewAttributeInfo(
                 getTypeMirror(CharSequence::class.java, elements), typeMirror
             )
         ) {
-            errorLogger
+            logger
                 .logError(
                     "Setters with %s option must be a CharSequence. (%s#%s)",
                     Option.GenerateStringOverloads, modelName, viewAttributeName
@@ -325,7 +325,7 @@ internal class ViewAttributeInfo(
         }
 
         if (options.contains(Option.NullOnRecycle) && (!hasSetNullability() || !isNullable())) {
-            errorLogger
+            logger
                 .logError(
                     "Setters with %s option must have a type that is annotated with @Nullable. " +
                         "(%s#%s)",

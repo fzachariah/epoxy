@@ -10,12 +10,21 @@ private val GENERATED_HELPER_CLASS_SUFFIX = "_EpoxyHelper"
 
 class ControllerClassInfo(
     private val elementUtils: Elements,
-    val controllerClassElement: TypeElement
+    val controllerClassElement: TypeElement,
+    val resourceProcessor: ResourceProcessor
 ) {
 
     val models: MutableSet<ControllerModelField> = HashSet()
     val generatedClassName: ClassName = getGeneratedClassName(controllerClassElement)
     val controllerClassType: TypeName = TypeName.get(controllerClassElement.asType())
+
+    val imports: List<String> by lazy {
+        resourceProcessor
+            .trees?.getPath(controllerClassElement)
+            ?.compilationUnit
+            ?.imports?.map { it.qualifiedIdentifier.toString() }
+            ?: emptyList()
+    }
 
     fun addModel(controllerModelField: ControllerModelField) {
         models.add(controllerModelField)
