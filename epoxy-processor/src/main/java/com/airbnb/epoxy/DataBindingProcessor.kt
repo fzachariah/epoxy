@@ -68,6 +68,7 @@ class DataBindingProcessor : BaseProcessor() {
                     annotatedElement.annotation<EpoxyDataBindingPattern>()?.enableDoNotHash == true
 
                 val rClassElement = Utils.getElementByName(layoutClassName, elementUtils, typeUtils)
+                rClassElement.ensureLoaded()
 
                 rClassElement
                     .enclosedElements

@@ -57,9 +57,9 @@ class ViewAttributeInfo(
 
         val options = HashSet<Option>()
         val param = when (viewAttributeElement) {
-            is ExecutableElement -> viewAttributeElement.parameters[0]
+            is ExecutableElement -> viewAttributeElement.parametersSynchronized[0]
             is VariableElement -> viewAttributeElement
-            else -> throw IllegalStateException("Unsuppported element type $viewAttributeElement")
+            else -> error("Unsuppported element type $viewAttributeElement")
         }
 
         viewAttributeTypeName = getViewAttributeType(viewAttributeElement, logger)
@@ -69,8 +69,8 @@ class ViewAttributeInfo(
         if (propAnnotation != null) {
             defaultConstant = propAnnotation.defaultValue
             groupKey = propAnnotation.group
-            options.addAll(Arrays.asList(*propAnnotation.options))
-            options.addAll(Arrays.asList(*propAnnotation.value))
+            options.addAll(propAnnotation.options)
+            options.addAll(propAnnotation.value)
         } else if (textAnnotation != null) {
             val stringResValue = textAnnotation.defaultRes
             if (stringResValue != 0) {
@@ -238,7 +238,7 @@ class ViewAttributeInfo(
 
         var viewClass: TypeElement? = modelInfo.viewElement
         while (viewClass != null) {
-            for (element in viewClass.enclosedElements) {
+            for (element in viewClass.enclosedElementsSynchronized) {
                 if (checkElementForConstant(element, defaultConstant, types, logger)) {
                     return
                 }

@@ -113,11 +113,10 @@ class EpoxyProcessor : BaseProcessorWithPackageConfigs() {
         )
     }
 
-    @Synchronized
     private fun getOrCreateTargetClass(
         modelClassMap: MutableMap<TypeElement, GeneratedModelInfo>,
         classElement: TypeElement
-    ): GeneratedModelInfo {
+    ): GeneratedModelInfo = synchronizedByValue(classElement){
 
         modelClassMap[classElement]?.let { return it }
 
@@ -271,7 +270,7 @@ class EpoxyProcessor : BaseProcessorWithPackageConfigs() {
 
                 currentSuperClassElement
                     .takeIf(includeSuperClass)
-                    ?.enclosedElements
+                    ?.enclosedElementsSynchronized
                     ?.filter { it.getAnnotation(EpoxyAttribute::class.java) != null }
                     ?.map { buildAttributeInfo(it, logger, typeUtils, elementUtils) }
                     ?.filterTo(result) {

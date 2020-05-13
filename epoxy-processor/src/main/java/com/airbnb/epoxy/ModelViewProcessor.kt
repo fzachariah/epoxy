@@ -83,7 +83,7 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
             }
     }
 
-    private fun validateViewElement(viewElement: Element): Boolean {
+    private fun validateViewElement(viewElement: Element): Boolean = synchronizedByValue(viewElement){
         if (viewElement.kind != ElementKind.CLASS || viewElement !is TypeElement) {
             logger.logError(
                 "${ModelView::class.java} annotations can only be on a class " +
@@ -124,15 +124,14 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
     private fun processSetterAnnotations(roundEnv: RoundEnvironment) {
 
         for (propAnnotation in modelPropAnnotations) {
-            for (prop in roundEnv.getElementsAnnotatedWith(propAnnotation)) {
-
+            roundEnv.getElementsAnnotatedWith(propAnnotation).forEach { prop ->
                 // Interfaces can use model property annotations freely, they will be processed if
                 // and when implementors of that interface are processed. This is particularly
                 // useful for Kotlin delegation where the model view class may not be overriding
                 // the interface properties directly, and so doesn't have an opportunity to annotate
                 // them with Epoxy model property annotations.
                 if (prop.enclosingElement.kind == ElementKind.INTERFACE) {
-                    continue
+                    return@forEach
                 }
 
                 val info = getModelInfoForPropElement(prop)
@@ -142,7 +141,7 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
                             "annotated with ${ModelView::class.java.simpleName} " +
                             "(${prop.enclosingElement.simpleName}#${prop.simpleName})"
                     )
-                    continue
+                    return@forEach
                 }
 
                 // JvmOverloads is used on properties with default arguments, which we support.
@@ -151,17 +150,17 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
                 // However, the JvmOverloads annotation is removed in the java class so we need
                 // to manually look for a valid overload function.
                 if (prop is ExecutableElement &&
-                    prop.parameters.isEmpty() &&
+                    prop.parametersSynchronized.isEmpty() &&
                     info.viewElement.findOverload(
                         prop,
                         1
                     )?.hasAnyAnnotation(modelPropAnnotations) == true
                 ) {
-                    continue
+                    return@forEach
                 }
 
                 if (!validatePropElement(prop, propAnnotation)) {
-                    continue
+                    return@forEach
                 }
 
                 info.addProp(prop)
@@ -271,7 +270,8 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
             return false
         }
 
-        if (element.parameters.size != paramCount) {
+        val parameters = element.parametersSynchronized
+        if (parameters.size != paramCount) {
             logger.logError(
                 "Methods annotated with %s must have exactly %s parameter (method: %s)",
                 annotationClass::class.java.simpleName, paramCount, element.getSimpleName()
@@ -282,7 +282,7 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
         checkTypeParameters?.let { expectedTypeParameters ->
             // Check also the parameter types
             var hasErrors = false
-            element.parameters.forEachIndexed { i, parameter ->
+            parameters.forEachIndexed { i, parameter ->
                 hasErrors = hasErrors || parameter.asType().kind != expectedTypeParameters[i]
             }
             if (hasErrors) {
@@ -291,13 +291,13 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
                         "found: %s (method: %s)",
                     annotationClass::class.java.simpleName,
                     expectedTypeParameters,
-                    element.parameters.map { it.asType().kind },
+                    parameters.map { it.asType().kind },
                     element.simpleName
                 )
             }
         }
 
-        val modifiers = element.getModifiers()
+        val modifiers = element.modifiers
         if (modifiers.contains(STATIC) || modifiers.contains(PRIVATE)) {
             logger.logError(
                 "Methods annotated with %s cannot be private or static (method: %s)",
@@ -412,7 +412,7 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
                     annotations: List<Class<out Annotation>>,
                     function: (Element) -> Unit
                 ) {
-                    superViewElement.enclosedElements
+                    superViewElement.enclosedElementsSynchronized
                         .filter {
                             // Make sure we can access the method
                             samePackage || !isFieldPackagePrivate(it)
@@ -508,13 +508,12 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
         val modelsToWrite = modelClassMap.values.toMutableList()
         modelsToWrite.removeAll(styleableModelsToWrite)
 
-        styleableModelsToWrite
-            .filter {
-                tryAddStyleBuilderAttribute(it, elementUtils, typeUtils)
-            }.let {
-                modelsToWrite.addAll(it)
-                styleableModelsToWrite.removeAll(it)
-            }
+        styleableModelsToWrite.filter("addStyleBuilderAttributes") {
+            tryAddStyleBuilderAttribute(it, elementUtils, typeUtils)
+        }.let {
+            modelsToWrite.addAll(it)
+            styleableModelsToWrite.removeAll(it)
+        }
 
 
         ModelViewWriter(modelWriter, typeUtils, elementUtils, this)

@@ -67,10 +67,11 @@ class GeneratedModelWriter(
     private val resourceProcessor: ResourceProcessor,
     private val configManager: ConfigManager,
     private val dataBindingModuleLookup: DataBindingModuleLookup,
-    private val elements: Elements
+    private val elements: Elements,
+    asyncable: Asyncable
 ) {
 
-    val modelInterfaceWriter = ModelBuilderInterfaceWriter(filer, types)
+    val modelInterfaceWriter = ModelBuilderInterfaceWriter(filer, types, asyncable)
 
     open class BuilderHooks {
         open fun beforeFinalBuild(builder: TypeSpec.Builder) {}
@@ -123,7 +124,7 @@ class GeneratedModelWriter(
         }
     }
 
-    fun writeFilesForViewInterfaces() {
+    suspend fun writeFilesForViewInterfaces() {
         modelInterfaceWriter.writeFilesForViewInterfaces()
     }
 

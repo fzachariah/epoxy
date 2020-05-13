@@ -7,7 +7,6 @@ import com.sun.tools.javac.tree.JCTree
 import com.sun.tools.javac.tree.JCTree.JCFieldAccess
 import com.sun.tools.javac.tree.TreeScanner
 import java.util.ArrayList
-import java.util.HashMap
 import java.util.concurrent.ConcurrentHashMap
 import javax.annotation.processing.ProcessingEnvironment
 import javax.lang.model.element.AnnotationMirror
@@ -200,7 +199,7 @@ class ResourceProcessor internal constructor(
     fun getAlternateLayouts(layout: ResourceValue): List<ResourceValue> {
         val layoutClassName = layout.className ?: return emptyList()
 
-        synchronized(rClassResources) {
+        synchronizedByValue(layoutClassName) {
             if (rClassResources.isEmpty()) {
                 // This will only have been filled if at least one view has a layout in it's annotation.
                 // If all view's use their default layout then resources haven't been parsed yet and we can
@@ -212,19 +211,17 @@ class ResourceProcessor internal constructor(
                 )
                 saveResourceValuesForRClass(layoutClassName, rLayoutClassElement)
             }
-            val layouts = rClassResources[layoutClassName]
-            if (layouts == null) {
-                logger.logError("No layout files found for R class: %s", layoutClassName!!)
-                return emptyList()
-            }
-            val result: MutableList<ResourceValue> = ArrayList()
-            val target = layout.resourceName + "_"
-            for (otherLayout in layouts) {
-                if (otherLayout.resourceName!!.startsWith(target)) {
-                    result.add(otherLayout)
-                }
-            }
-            return result
+        }
+
+        val layouts = rClassResources[layoutClassName]
+        if (layouts == null) {
+            logger.logError("No layout files found for R class: %s", layoutClassName)
+            return emptyList()
+        }
+
+        val target = layout.resourceName + "_"
+        return layouts.filter { otherLayout ->
+            otherLayout.resourceName?.startsWith(target) == true
         }
     }
 
@@ -236,23 +233,25 @@ class ResourceProcessor internal constructor(
     private fun saveResourceValuesForRClass(
         rClass: ClassName?,
         resourceClass: Element
-    ) = synchronized(rClassResources) {
-        if (rClass == null || rClassResources.containsKey(rClass)) {
-            return
+    ) {
+        if (rClass == null) return
+
+        synchronizedByValue(rClass) {
+            if (rClassResources.containsKey(rClass)) return
+
+            val resourceNames = resourceClass.enclosedElementsSynchronized
+                .filterIsInstance<VariableElement>()
+                .map { it.simpleName.toString() }
+                .map {
+                    ResourceValue(
+                        rClass,
+                        it,
+                        value = 0 // Don't care about this for our use case
+                    )
+                }
+
+            rClassResources[rClass] = resourceNames
         }
-
-        val resourceNames = resourceClass.enclosedElements
-            .filterIsInstance<VariableElement>()
-            .map { it.simpleName.toString() }
-            .map {
-                ResourceValue(
-                    rClass,
-                    it,
-                    value = 0 // Don't care about this for our use case
-                )
-            }
-
-        rClassResources[rClass] = resourceNames
     }
 
     /**

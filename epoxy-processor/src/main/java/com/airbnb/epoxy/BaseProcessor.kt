@@ -43,7 +43,8 @@ abstract class BaseProcessor : AbstractProcessor(), Asyncable {
             resourceProcessor,
             configManager,
             dataBindingModuleLookup,
-            elementUtils
+            elementUtils,
+            this
         )
     }
 
@@ -81,7 +82,6 @@ abstract class BaseProcessor : AbstractProcessor(), Asyncable {
         ConfigManager.PROCESSOR_OPTION_LOG_TIMINGS
     )
 
-    @Synchronized
     override fun init(processingEnv: ProcessingEnvironment) {
         super.init(processingEnv)
 
@@ -90,6 +90,7 @@ abstract class BaseProcessor : AbstractProcessor(), Asyncable {
         elementUtils = processingEnv.elementUtils
         typeUtils = processingEnv.typeUtils
         configManager = ConfigManager(processingEnv.options, elementUtils, typeUtils)
+        synchronizationEnabled = configManager.enableCoroutines
         resourceProcessor = ResourceProcessor(processingEnv, logger, elementUtils, typeUtils)
     }
 

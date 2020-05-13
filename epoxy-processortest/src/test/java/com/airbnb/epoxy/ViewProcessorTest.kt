@@ -278,20 +278,19 @@ class ViewProcessorTest {
         val model = JavaFileObjects
             .forResource("BaseModelView.java".patchResource())
 
-        val baseModel = JavaFileObjects
-            .forSourceLines(
-                "com.airbnb.epoxy.TestBaseModel", "package com.airbnb.epoxy;\n" +
-                    "\n" +
-                    "import android.widget.FrameLayout;\n" +
-                    "\n" +
-                    "public abstract class TestBaseModel<T extends FrameLayout> " +
-                    "extends EpoxyModel<T> {\n" +
-                    "@Override\n" +
-                    "  public void bind(T view, EpoxyModel<?> previouslyBoundModel) {\n" +
-                    "    super.bind(view, previouslyBoundModel);\n" +
-                    "  }" +
-                    "}"
-            )
+        val baseModel = JavaFileObjects.forSourceLines(
+            "com.airbnb.epoxy.TestBaseModel", "package com.airbnb.epoxy;\n" +
+                "\n" +
+                "import android.widget.FrameLayout;\n" +
+                "\n" +
+                "public abstract class TestBaseModel<T extends FrameLayout> " +
+                "extends EpoxyModel<T> {\n" +
+                "@Override\n" +
+                "  public void bind(T view, EpoxyModel<?> previouslyBoundModel) {\n" +
+                "    super.bind(view, previouslyBoundModel);\n" +
+                "  }" +
+                "}"
+        )
 
         val generatedModel = JavaFileObjects.forResource(
             "BaseModelViewWithSuperDiffBindModel_.java".patchResource()
@@ -310,19 +309,19 @@ class ViewProcessorTest {
         val model = JavaFileObjects
             .forResource("BaseModelView.java".patchResource())
 
-        val baseModel = JavaFileObjects
-            .forSourceLines(
-                "com.airbnb.epoxy.TestBaseModel", "package com.airbnb.epoxy;\n" +
-                    "\n" +
-                    "import android.widget.FrameLayout;\n" +
-                    "\n" +
-                    "public abstract class TestBaseModel<T extends FrameLayout> " +
-                    "extends EpoxyModel<T> {\n" +
-                    "  @EpoxyAttribute String baseModelString;\n" +
-                    "}\n"
-            )
+        val baseModel = JavaFileObjects.forSourceLines(
+            "com.airbnb.epoxy.TestBaseModel", "package com.airbnb.epoxy;\n" +
+                "\n" +
+                "import android.widget.FrameLayout;\n" +
+                "\n" +
+                "public abstract class TestBaseModel<T extends FrameLayout> " +
+                "extends EpoxyModel<T> {\n" +
+                "  @EpoxyAttribute String baseModelString;\n" +
+                "}\n"
+        )
 
-        val generatedModel = JavaFileObjects.forResource("BaseModelWithAttributeViewModel_.java".patchResource())
+        val generatedModel =
+            JavaFileObjects.forResource("BaseModelWithAttributeViewModel_.java".patchResource())
 
         assert_().about(javaSources())
             .that(listOf(baseModel, model))
@@ -843,7 +842,8 @@ class ViewProcessorTest {
         val superModel = JavaFileObjects
             .forResource("TestAfterBindPropsSuperView.java".patchResource())
 
-        val generatedModel = JavaFileObjects.forResource("TestAfterBindPropsViewModel_.java".patchResource())
+        val generatedModel =
+            JavaFileObjects.forResource("TestAfterBindPropsViewModel_.java".patchResource())
 
         assert_().about(javaSources())
             .that(listOf(model, superModel))
@@ -868,7 +868,8 @@ class ViewProcessorTest {
         val model = JavaFileObjects
             .forResource("TextPropDefaultView.java".patchResource())
 
-        val generatedModel = JavaFileObjects.forResource("TextPropDefaultViewModel_.java".patchResource())
+        val generatedModel =
+            JavaFileObjects.forResource("TextPropDefaultViewModel_.java".patchResource())
 
         assert_().about(javaSources())
             .that(listOf(model, R))

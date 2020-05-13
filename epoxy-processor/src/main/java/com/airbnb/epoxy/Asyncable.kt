@@ -57,6 +57,31 @@ interface Asyncable {
         }
     }
 
+    suspend fun <T : Any> Iterable<T>.filter(
+        tag: String,
+        parallel: Boolean = true,
+        block: suspend (T) -> Boolean
+    ): List<T> {
+        val parallelize = parallel && coroutinesEnabled
+        return logger.measure(tag, numItems = count(), isParallel = parallelize) {
+            if (!parallelize) {
+                filter {
+                    try {
+                        block(it)
+                    } catch (e: Exception) {
+                        logger.logError(e, "$tag failed")
+                        false
+                    }
+                }
+            } else {
+                map {
+                    coroutineScope.async { if (block(it)) it else null }
+                }.awaitAndLog(tag)
+                    .filterNotNull()
+            }
+        }
+    }
+
     suspend fun <K, V> Map<K, V>.forEach(
         tag: String,
         parallel: Boolean = true,

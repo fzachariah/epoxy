@@ -11,6 +11,7 @@ import javax.lang.model.AnnotatedConstruct
 import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
+import javax.lang.model.element.VariableElement
 import javax.lang.model.type.MirroredTypeException
 import javax.lang.model.type.TypeMirror
 import javax.lang.model.util.Elements
@@ -19,10 +20,8 @@ import kotlin.reflect.KClass
 
 fun TypeMirror.isVoidClass(): Boolean = toString() == Void::class.java.canonicalName
 
-@Synchronized
-fun typeMirror(block: () -> KClass<*>): TypeMirror? {
+fun typeMirror(block: () -> KClass<*>): TypeMirror? = synchronizedForTypeLookup {
     // Unfortunately we have to do this weird try/catch to get the class type
-
     return try {
         // this should throw
         block()
@@ -57,7 +56,7 @@ fun getTypeMirror(
 fun getTypeMirror(
     canonicalName: String,
     elements: Elements
-): TypeMirror? = synchronized(elements) {
+): TypeMirror? = synchronizedForTypeLookup {
     try {
         elements.getTypeElement(canonicalName)?.asType()
     } catch (mte: MirroredTypeException) {
@@ -65,19 +64,21 @@ fun getTypeMirror(
     }
 }
 
-fun TypeMirror.toStringSynchronized(): String = synchronized(this) {
-    // This toString method needs to fill in the information from the javac ClassReader
-    // which reads the class file in a non thread safe way.
-    toString()
-}
+val Element.enclosedElementsSynchronized: List<Element>
+    get() {
+        ensureLoaded()
+        return enclosedElements
+    }
 
-fun TypeElement.getEnclosedElementsSynchronized(): List<Element> = synchronized(this){
-    return enclosedElements
-}
+val ExecutableElement.parametersSynchronized: List<VariableElement>
+    get() {
+        ensureLoaded()
+        return parameters
+    }
 
 fun ClassName.asTypeElement(
     elements: Elements
-): TypeElement? = synchronized(elements) {
+): TypeElement? = synchronizedForTypeLookup {
     elements.getTypeElement(reflectionName())
 }
 
@@ -124,17 +125,20 @@ fun String.toUpperCamelCase(): String {
     }
 }
 
-fun TypeElement.executableElements() = enclosedElements.filterIsInstance<ExecutableElement>()
+fun TypeElement.executableElements() =
+    enclosedElementsSynchronized.filterIsInstance<ExecutableElement>()
 
 /** @return Whether at least one of the given annotations is present on the receiver. */
 fun AnnotatedConstruct.hasAnyAnnotation(annotationClasses: List<Class<out Annotation>>) =
-    annotationClasses.any {
-        try {
-            getAnnotation(it) != null
-        } catch (e: MirroredTypeException) {
-            // This will be thrown if the annotation contains a param of type Class. This is fine,
-            // it still means that the annotation is present
-            true
+    synchronizedForTypeLookup {
+        annotationClasses.any {
+            try {
+                getAnnotation(it) != null
+            } catch (e: MirroredTypeException) {
+                // This will be thrown if the annotation contains a param of type Class. This is fine,
+                // it still means that the annotation is present
+                true
+            }
         }
     }
 
@@ -249,7 +253,7 @@ fun <K, V> MutableMap<K, V>.putOrMerge(
  * True if the two elements represent overloads of the same function in a class.
  */
 fun areOverloads(e1: ExecutableElement, e2: ExecutableElement): Boolean {
-    return e1.parameters.size != e2.parameters.size &&
+    return e1.parametersSynchronized.size != e2.parametersSynchronized.size &&
         e1.simpleName == e2.simpleName &&
         e1.enclosingElement == e2.enclosingElement &&
         e1.returnType == e2.returnType &&
@@ -257,11 +261,11 @@ fun areOverloads(e1: ExecutableElement, e2: ExecutableElement): Boolean {
 }
 
 fun TypeElement.findOverload(element: ExecutableElement, paramCount: Int): ExecutableElement? {
-    require(element.parameters.size != paramCount) { "Element $element already has param count $paramCount" }
+    require(element.parametersSynchronized.size != paramCount) { "Element $element already has param count $paramCount" }
 
-    return enclosedElements
+    return enclosedElementsSynchronized
         .filterIsInstance<ExecutableElement>()
-        .firstOrNull { it.parameters.size == paramCount && areOverloads(it, element) }
+        .firstOrNull { it.parametersSynchronized.size == paramCount && areOverloads(it, element) }
 }
 
 fun TypeElement.hasOverload(element: ExecutableElement, paramCount: Int): Boolean {

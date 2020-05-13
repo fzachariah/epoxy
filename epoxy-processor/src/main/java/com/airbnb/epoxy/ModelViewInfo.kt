@@ -294,12 +294,13 @@ class ModelViewInfo(
         // in the kotlin metadata of this class. We do this by searching for a function matching the same
         // name, param count, param name, and param type.
         // This assumes the param count we're looking for is 1 since this is an epoxy setter.
-        require(functionElement.parameters.size == 1) { "Expected function $functionElement to have exactly 1 parameter" }
-        val paramName = functionElement.parameters.single().simpleName.toString()
+        val parameters = functionElement.parametersSynchronized
+        require(parameters.size == 1) { "Expected function $functionElement to have exactly 1 parameter" }
+        val paramName = parameters.single().simpleName.toString()
         val functionName = functionElement.simpleName.toString()
 
         val propTypeClassName =
-            functionElement.parameters.single().asType().toString().let { ClassNameData.from(it) }
+            parameters.single().asType().toString().let { ClassNameData.from(it) }
 
         // Checking function name, param count, and param name are easy
         val matchingFunctions = toKmClass().functions

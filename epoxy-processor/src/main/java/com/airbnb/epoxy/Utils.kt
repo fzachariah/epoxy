@@ -106,12 +106,11 @@ internal object Utils {
             ?: error("Could not by element with name $name")
     }
 
-    @Synchronized
     fun getElementByNameNullable(
         name: String?,
         elements: Elements,
         types: Types
-    ): Element? = synchronized(elements) {
+    ): Element? = synchronizedForTypeLookup {
         // The javac ClassReader that is invoked to load type elements is not thread safe,
         // so all access points are synchronized to Elements for safety.
         try {
@@ -228,7 +227,8 @@ internal object Utils {
 
     @JvmStatic
     fun isSubtypeOfType(typeMirror: TypeMirror, otherType: String): Boolean {
-        if (otherType == typeMirror.toStringSynchronized()) {
+        typeMirror.ensureLoaded()
+        if (otherType == typeMirror.toString()) {
             return true
         }
         if (typeMirror.kind != TypeKind.DECLARED) {
@@ -337,7 +337,7 @@ internal object Utils {
         if (clazz.asType().kind != TypeKind.DECLARED) {
             return null
         }
-        for (subElement in clazz.enclosedElements) {
+        for (subElement in clazz.enclosedElementsSynchronized) {
             if (subElement.kind == ElementKind.METHOD) {
                 val methodElement = subElement as ExecutableElement
                 if (methodElement.simpleName.toString() != method.name) {
@@ -365,7 +365,7 @@ internal object Utils {
         types: Types,
         elements: Elements
     ): Boolean {
-        val params1 = method1.parameters
+        val params1 = method1.parametersSynchronized
         val params2 = method2.parameters
         if (params1.size != params2.size) {
             return false
@@ -515,7 +515,7 @@ internal object Utils {
         val method = element as ExecutableElement
         val methodName = method.simpleName.toString()
         return (PATTERN_STARTS_WITH_SET.matcher(methodName).matches()
-            && method.parameters.size == 1)
+            && method.parametersSynchronized.size == 1)
     }
 
     fun removeSetPrefix(string: String): String {
@@ -526,7 +526,8 @@ internal object Utils {
     }
 
     fun isType(typeMirror: TypeMirror, otherType: String): Boolean {
-        return otherType == typeMirror.toStringSynchronized()
+        typeMirror.ensureLoaded()
+        return otherType == typeMirror.toString()
     }
 
     fun isType(

@@ -23,8 +23,9 @@ const val MODEL_BUILDER_INTERFACE_SUFFIX = "Builder"
  */
 class ModelBuilderInterfaceWriter(
     private val filer: Filer,
-    val types: Types
-) {
+    val types: Types,
+    val asyncable: Asyncable
+) : Asyncable by asyncable {
 
     private val viewInterfacesToGenerate = ConcurrentHashMap<ClassName, InterfaceDetails>()
 
@@ -117,7 +118,7 @@ class ModelBuilderInterfaceWriter(
     /**
      * We need to gather information about all of the view interfaces first, and then write the interface classes.
      */
-    fun writeFilesForViewInterfaces() {
+    suspend fun writeFilesForViewInterfaces() {
         // For each interface we figure out which methods to add to it by getting the largest subset of props supported by all models with the interface.
         // This approach has a few advantages:
         // 1. Easily inherit TextProp and other overloads
@@ -126,8 +127,7 @@ class ModelBuilderInterfaceWriter(
         // This means that the generated interface won't necessarily map exactly to the original view interface
         // It just represents the set of props shared by all models with that view interface, which should be all we need in practice.
 
-        for ((interfaceName, details) in viewInterfacesToGenerate) {
-
+        viewInterfacesToGenerate.forEach("write view interface") { interfaceName, details ->
             val interfaceSpec = buildInterface(interfaceName) {
                 addModifiers(Modifier.PUBLIC)
 
