@@ -21,17 +21,22 @@ internal object ProcessorTestUtils {
 
         val generatedModel = JavaFileObjects.forResource(generatedFile.patchResource())
 
-        val processors = mutableListOf<Processor>().apply {
-            add(EpoxyProcessor())
-            if (useParis) add(ParisProcessor())
-        }
-
         assert_().about(javaSources())
             .that(helperObjects + listOf(model))
-            .processedWith(processors)
+            .processedWith(processors(useParis))
             .compilesWithoutError()
             .and()
             .generatesSources(generatedModel)
+    }
+
+    fun processors(useParis: Boolean = false): MutableList<Processor> {
+        return mutableListOf<Processor>().apply {
+            add(EpoxyProcessor())
+            add(ControllerProcessor())
+            add(DataBindingProcessor())
+            add(ModelViewProcessor())
+            if (useParis) add(ParisProcessor())
+        }
     }
 
     // See epoxy-processortest/src/test/java/com/airbnb/epoxy/GuavaPatch.kt

@@ -20,7 +20,7 @@ internal object ProcessorTestUtils {
 
         assert_().about(javaSource())
             .that(model)
-            .processedWith(EpoxyProcessor())
+            .processedWith(processors())
             .failsToCompile()
             .withErrorContaining(errorMessage)
     }
@@ -32,7 +32,7 @@ internal object ProcessorTestUtils {
 
         assert_().about(javaSource())
             .that(model)
-            .processedWith(EpoxyProcessor())
+            .processedWith(processors())
             .compilesWithoutError()
     }
 
@@ -48,17 +48,40 @@ internal object ProcessorTestUtils {
 
         val generatedModel = JavaFileObjects.forResource(generatedFile.patchResource())
 
-        val processors = mutableListOf<Processor>().apply {
-            add(EpoxyProcessor())
-            if (useParis) add(ParisProcessor())
-        }
+        val processors = processors(useParis)
 
         assert_().about(javaSources())
             .that(helperObjects + listOf(model))
+            .withCompilerOptions()
             .processedWith(processors)
             .compilesWithoutError()
             .and()
             .generatesSources(generatedModel)
+    }
+
+    @JvmStatic
+    @JvmOverloads
+    fun processors(useParis: Boolean = false): MutableList<Processor> {
+        return mutableListOf<Processor>().apply {
+            add(EpoxyProcessor())
+            add(ControllerProcessor())
+            add(DataBindingProcessor())
+            add(ModelViewProcessor())
+            if (useParis) add(ParisProcessor())
+        }
+    }
+
+    @JvmStatic
+    fun options(
+        withNoValidation: Boolean = false,
+        withImplicitAdding: Boolean = false
+    ): List<String> {
+        infix fun String.setTo(value: Any) = "-A$this=$value"
+
+        return mutableListOf<String>().apply {
+            if (withNoValidation) add("validateEpoxyModelUsage" setTo false)
+            if (withImplicitAdding) add("implicitlyAddAutoModels" setTo true)
+        }
     }
 
     @JvmStatic
@@ -82,7 +105,7 @@ internal object ProcessorTestUtils {
 
         assert_().about(javaSources())
             .that(sources)
-            .processedWith(EpoxyProcessor())
+            .processedWith(processors())
             .compilesWithoutError()
             .and()
             .generatesSources(

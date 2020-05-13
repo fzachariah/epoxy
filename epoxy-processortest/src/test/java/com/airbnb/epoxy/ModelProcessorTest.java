@@ -56,7 +56,7 @@ public class ModelProcessorTest {
 
     assert_().about(javaSource())
         .that(model)
-        .processedWith(new EpoxyProcessor())
+        .processedWith(new EpoxyProcessor(), new ModelViewProcessor(), new DataBindingProcessor(), new ControllerProcessor())
         .compilesWithoutError()
         .and()
         .generatesSources(generatedModel, generatedSubClassModel);
@@ -124,7 +124,7 @@ public class ModelProcessorTest {
 
     assert_().about(javaSource())
         .that(model)
-        .processedWith(new EpoxyProcessor())
+        .processedWith(new EpoxyProcessor(), new ModelViewProcessor(), new DataBindingProcessor(), new ControllerProcessor())
         .compilesWithoutError();
 
     // We don't generate subclasses if the model is abstract unless it has a class annotation.
@@ -159,7 +159,7 @@ public class ModelProcessorTest {
 
     assert_().about(javaSource())
         .that(model)
-        .processedWith(new EpoxyProcessor())
+        .processedWith(new EpoxyProcessor(), new ModelViewProcessor(), new DataBindingProcessor(), new ControllerProcessor())
         .compilesWithoutError()
         .and()
         .generatesSources(generatedModel, generatedSubClassModel);
@@ -214,7 +214,7 @@ public class ModelProcessorTest {
 
     assert_().about(javaSource())
         .that(model)
-        .processedWith(new EpoxyProcessor())
+        .processedWith(new EpoxyProcessor(), new ModelViewProcessor(), new DataBindingProcessor(), new ControllerProcessor())
         .compilesWithoutError()
         .and()
         .generatesSources(generatedNoLayoutModel, generatedWithLayoutModel);
@@ -234,7 +234,7 @@ public class ModelProcessorTest {
 
     assert_().about(javaSource())
         .that(model)
-        .processedWith(new EpoxyProcessor())
+        .processedWith(new EpoxyProcessor(), new ModelViewProcessor(), new DataBindingProcessor(), new ControllerProcessor())
         .compilesWithoutError()
         .and()
         .generatesSources(generatedNoLayoutModel, generatedStillNoLayoutModel,
@@ -262,7 +262,7 @@ public class ModelProcessorTest {
 
     assert_().about(javaSource())
         .that(model)
-        .processedWith(new EpoxyProcessor())
+        .processedWith(new EpoxyProcessor(), new ModelViewProcessor(), new DataBindingProcessor(), new ControllerProcessor())
         .compilesWithoutError()
         .and()
         .generatesSources(generatedNoLayoutModel);

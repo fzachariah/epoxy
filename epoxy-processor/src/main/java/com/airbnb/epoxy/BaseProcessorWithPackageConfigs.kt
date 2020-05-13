@@ -4,8 +4,7 @@ import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.Element
 import kotlin.reflect.KClass
 
-abstract class BaseProcessorWithPackageConfigs(testOptions: Map<String, String>? = null) :
-    BaseProcessor(testOptions) {
+abstract class BaseProcessorWithPackageConfigs : BaseProcessor() {
 
     abstract val usesPackageEpoxyConfig: Boolean
     abstract val usesModelViewConfig: Boolean

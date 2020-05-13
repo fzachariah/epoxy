@@ -22,9 +22,7 @@ import java.util.concurrent.ConcurrentHashMap
  * reduces their usefulness and doesn't make as much sense to support.
  */
 @IncrementalAnnotationProcessor(IncrementalAnnotationProcessorType.AGGREGATING)
-class EpoxyProcessor @JvmOverloads constructor(
-    testOptions: Map<String, String>? = null
-) : BaseProcessorWithPackageConfigs(testOptions) {
+class EpoxyProcessor : BaseProcessorWithPackageConfigs() {
 
     override val usesPackageEpoxyConfig: Boolean = true
     override val usesModelViewConfig: Boolean = false
@@ -239,18 +237,6 @@ class EpoxyProcessor @JvmOverloads constructor(
     }
 
     companion object {
-        /** For testing.  */
-        @JvmStatic
-        fun withNoValidation(): EpoxyProcessor {
-            return EpoxyProcessor(mapOf(ConfigManager.PROCESSOR_OPTION_VALIDATE_MODEL_USAGE to "false"))
-        }
-
-        /** For testing.  */
-        @JvmStatic
-        fun withImplicitAdding(): EpoxyProcessor {
-            return EpoxyProcessor(mapOf(ConfigManager.PROCESSOR_OPTION_IMPLICITLY_ADD_AUTO_MODELS to "true"))
-        }
-
         fun buildAttributeInfo(
             attribute: Element,
             logger: Logger,

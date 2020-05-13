@@ -55,9 +55,7 @@ internal class BasicGeneratedModelInfo(
             ).asType()
         }
         boundObjectTypeName = TypeName.get(boundObjectTypeMirror!!)
-        this.boundObjectTypeElement = (boundObjectTypeName as? ClassName)?.let {
-            elements.getTypeElement(it.reflectionName())
-        }
+        this.boundObjectTypeElement = (boundObjectTypeName as? ClassName)?.asTypeElement(elements)
 
         val annotation = superClassElement.getAnnotation(EpoxyModelClass::class.java)
 

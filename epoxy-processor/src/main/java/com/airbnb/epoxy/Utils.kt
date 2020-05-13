@@ -106,12 +106,15 @@ internal object Utils {
             ?: error("Could not by element with name $name")
     }
 
+    @Synchronized
     fun getElementByNameNullable(
         name: String?,
         elements: Elements,
         types: Types
-    ): Element? {
-        return try {
+    ): Element? = synchronized(elements) {
+        // The javac ClassReader that is invoked to load type elements is not thread safe,
+        // so all access points are synchronized to Elements for safety.
+        try {
             elements.getTypeElement(name)
         } catch (mte: MirroredTypeException) {
             types.asElement(mte.typeMirror)
@@ -201,14 +204,8 @@ internal object Utils {
 
     @JvmStatic
     fun isEpoxyModel(type: TypeMirror): Boolean {
-        return (isSubtypeOfType(
-            type,
-            EPOXY_MODEL_TYPE
-        )
-            || isSubtypeOfType(
-            type,
-            UNTYPED_EPOXY_MODEL_TYPE
-        ))
+        return (isSubtypeOfType(type, EPOXY_MODEL_TYPE)
+            || isSubtypeOfType(type, UNTYPED_EPOXY_MODEL_TYPE))
     }
 
     fun isEpoxyModel(type: TypeElement): Boolean {
@@ -274,10 +271,8 @@ internal object Utils {
         class2: TypeElement?,
         elements: Elements
     ): Boolean {
-        val package1 =
-            elements.getPackageOf(class1).qualifiedName
-        val package2 =
-            elements.getPackageOf(class2).qualifiedName
+        val package1 = elements.getPackageOf(class1).qualifiedName
+        val package2 = elements.getPackageOf(class2).qualifiedName
         return package1 == package2
     }
 
@@ -308,8 +303,7 @@ internal object Utils {
      */
     @JvmStatic
     fun isFieldPackagePrivate(element: Element): Boolean {
-        val modifiers =
-            element.modifiers
+        val modifiers = element.modifiers
         return (!modifiers.contains(Modifier.PUBLIC)
             && !modifiers.contains(Modifier.PROTECTED)
             && !modifiers.contains(Modifier.PRIVATE))
@@ -335,7 +329,9 @@ internal object Utils {
      */
     @JvmStatic
     fun getMethodOnClass(
-        clazz: TypeElement, method: MethodSpec, typeUtils: Types,
+        clazz: TypeElement,
+        method: MethodSpec,
+        typeUtils: Types,
         elements: Elements
     ): ExecutableElement? {
         if (clazz.asType().kind != TypeKind.DECLARED) {
@@ -566,10 +562,8 @@ internal object Utils {
         paramName: String,
         typeUtils: Types
     ): ClassName? {
-        val am =
-            getAnnotationMirror(annotatedElement, annotationClass) ?: return null
-        val av =
-            getAnnotationValue(am, paramName)
+        val am = getAnnotationMirror(annotatedElement, annotationClass) ?: return null
+        val av = getAnnotationValue(am, paramName)
         return if (av == null) {
             null
         } else {
@@ -598,8 +592,7 @@ internal object Utils {
         annotationMirror: AnnotationMirror,
         key: String
     ): AnnotationValue? {
-        for ((key1, value) in annotationMirror
-            .elementValues) {
+        for ((key1, value) in annotationMirror.elementValues) {
             if (key1.simpleName.toString() == key) {
                 return value
             }
@@ -611,32 +604,17 @@ internal object Utils {
         return s.replace("([^_A-Z])([A-Z])".toRegex(), "$1_$2").toLowerCase()
     }
 
-    fun <T> notNull(`object`: T?): T {
-        if (`object` == null) {
-            throw NullPointerException()
-        }
-        return `object`
-    }
-
     fun getDefaultValue(attributeType: TypeName): String {
-        return if (attributeType === TypeName.BOOLEAN) {
-            "false"
-        } else if (attributeType === TypeName.INT) {
-            "0"
-        } else if (attributeType === TypeName.BYTE) {
-            "(byte) 0"
-        } else if (attributeType === TypeName.CHAR) {
-            "(char) 0"
-        } else if (attributeType === TypeName.SHORT) {
-            "(short) 0"
-        } else if (attributeType === TypeName.LONG) {
-            "0L"
-        } else if (attributeType === TypeName.FLOAT) {
-            "0.0f"
-        } else if (attributeType === TypeName.DOUBLE) {
-            "0.0d"
-        } else {
-            "null"
+        return when {
+            attributeType === TypeName.BOOLEAN -> "false"
+            attributeType === TypeName.INT -> "0"
+            attributeType === TypeName.BYTE -> "(byte) 0"
+            attributeType === TypeName.CHAR -> "(char) 0"
+            attributeType === TypeName.SHORT -> "(short) 0"
+            attributeType === TypeName.LONG -> "0L"
+            attributeType === TypeName.FLOAT -> "0.0f"
+            attributeType === TypeName.DOUBLE -> "0.0d"
+            else -> "null"
         }
     }
 }

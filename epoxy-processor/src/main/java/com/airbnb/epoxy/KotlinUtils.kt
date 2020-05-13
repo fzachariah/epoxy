@@ -19,6 +19,7 @@ import kotlin.reflect.KClass
 
 fun TypeMirror.isVoidClass(): Boolean = toString() == Void::class.java.canonicalName
 
+@Synchronized
 fun typeMirror(block: () -> KClass<*>): TypeMirror? {
     // Unfortunately we have to do this weird try/catch to get the class type
 
@@ -57,13 +58,17 @@ fun getTypeMirror(
     canonicalName: String,
     elements: Elements
 ): TypeMirror? = synchronized(elements) {
-    // This is synchronized because otherwise for some reason it can falsely return null
-    // when being accessed in parallel.
     try {
         elements.getTypeElement(canonicalName)?.asType()
     } catch (mte: MirroredTypeException) {
         mte.typeMirror
     }
+}
+
+fun ClassName.asTypeElement(
+    elements: Elements
+): TypeElement? = synchronized(elements) {
+    elements.getTypeElement(reflectionName())
 }
 
 fun Class<*>.asTypeElement(

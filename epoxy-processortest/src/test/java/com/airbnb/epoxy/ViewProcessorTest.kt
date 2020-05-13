@@ -2,10 +2,10 @@ package com.airbnb.epoxy
 
 import com.airbnb.epoxy.ProcessorTestUtils.assertGeneration
 import com.airbnb.epoxy.ProcessorTestUtils.assertGenerationError
+import com.airbnb.epoxy.ProcessorTestUtils.processors
 import com.google.common.truth.Truth.assert_
 import com.google.testing.compile.JavaFileObjects
 import com.google.testing.compile.JavaSourcesSubjectFactory.javaSources
-import java.util.Arrays.asList
 import javax.tools.JavaFileObject
 import org.junit.Test
 
@@ -266,8 +266,8 @@ class ViewProcessorTest {
         val generatedModel = JavaFileObjects.forResource("BaseModelViewModel_.java".patchResource())
 
         assert_().about(javaSources())
-            .that(asList(baseModel, model))
-            .processedWith(EpoxyProcessor())
+            .that(listOf(baseModel, model))
+            .processedWith(processors())
             .compilesWithoutError()
             .and()
             .generatesSources(generatedModel)
@@ -298,8 +298,8 @@ class ViewProcessorTest {
         )
 
         assert_().about(javaSources())
-            .that(asList(baseModel, model))
-            .processedWith(EpoxyProcessor())
+            .that(listOf(baseModel, model))
+            .processedWith(processors())
             .compilesWithoutError()
             .and()
             .generatesSources(generatedModel)
@@ -325,8 +325,8 @@ class ViewProcessorTest {
         val generatedModel = JavaFileObjects.forResource("BaseModelWithAttributeViewModel_.java".patchResource())
 
         assert_().about(javaSources())
-            .that(asList(baseModel, model))
-            .processedWith(EpoxyProcessor())
+            .that(listOf(baseModel, model))
+            .processedWith(processors())
             .compilesWithoutError()
             .and()
             .generatesSources(generatedModel)
@@ -364,8 +364,8 @@ class ViewProcessorTest {
             )
 
         assert_().about(javaSources())
-            .that(asList(baseModel, model))
-            .processedWith(EpoxyProcessor())
+            .that(listOf(baseModel, model))
+            .processedWith(processors())
             .failsToCompile()
             .withErrorContaining(
                 "The base model provided to an ModelView must extend EpoxyModel"
@@ -423,8 +423,8 @@ class ViewProcessorTest {
         )
 
         assert_().about(javaSources())
-            .that(asList(baseModel, model, configClass, R))
-            .processedWith(EpoxyProcessor())
+            .that(listOf(baseModel, model, configClass, R))
+            .processedWith(processors())
             .compilesWithoutError()
             .and()
             .generatesSources(generatedModel)
@@ -484,8 +484,8 @@ class ViewProcessorTest {
         )
 
         assert_().about(javaSources())
-            .that(asList(baseModel, model, configClass, R))
-            .processedWith(EpoxyProcessor())
+            .that(listOf(baseModel, model, configClass, R))
+            .processedWith(processors())
             .compilesWithoutError()
             .and()
             .generatesSources(generatedModel)
@@ -518,8 +518,8 @@ class ViewProcessorTest {
             )
 
         assert_().about(javaSources())
-            .that(asList(baseModel, model, configClass, R))
-            .processedWith(EpoxyProcessor())
+            .that(listOf(baseModel, model, configClass, R))
+            .processedWith(processors())
             .failsToCompile()
             .withErrorContaining(
                 "The base model provided to an ModelView must extend EpoxyModel"
@@ -550,8 +550,8 @@ class ViewProcessorTest {
         )
 
         assert_().about(javaSources())
-            .that(asList(model, R))
-            .processedWith(EpoxyProcessor())
+            .that(listOf(model, R))
+            .processedWith(processors())
             .compilesWithoutError()
             .and()
             .generatesSources(generatedModel)
@@ -603,8 +603,8 @@ class ViewProcessorTest {
         )
 
         assert_().about(javaSources())
-            .that(asList(model, configClass, R))
-            .processedWith(EpoxyProcessor())
+            .that(listOf(model, configClass, R))
+            .processedWith(processors())
             .compilesWithoutError()
             .and()
             .generatesSources(generatedModel)
@@ -666,8 +666,8 @@ class ViewProcessorTest {
         )
 
         assert_().about(javaSources())
-            .that(asList(model, configClass, R2, R))
-            .processedWith(EpoxyProcessor())
+            .that(listOf(model, configClass, R2, R))
+            .processedWith(processors())
             .compilesWithoutError()
             .and()
             .generatesSources(generatedModel)
@@ -720,8 +720,8 @@ class ViewProcessorTest {
         )
 
         assert_().about(javaSources())
-            .that(asList(model, configClass, R))
-            .processedWith(EpoxyProcessor())
+            .that(listOf(model, configClass, R))
+            .processedWith(processors())
             .compilesWithoutError()
             .and()
             .generatesSources(generatedModel)
@@ -775,8 +775,8 @@ class ViewProcessorTest {
         )
 
         assert_().about(javaSources())
-            .that(asList(model, configClass, R))
-            .processedWith(EpoxyProcessor())
+            .that(listOf(model, configClass, R))
+            .processedWith(processors())
             .compilesWithoutError()
             .and()
             .generatesSources(generatedModel)
@@ -828,8 +828,8 @@ class ViewProcessorTest {
         )
 
         assert_().about(javaSources())
-            .that(asList(model, configClass, R))
-            .processedWith(EpoxyProcessor())
+            .that(listOf(model, configClass, R))
+            .processedWith(processors())
             .compilesWithoutError()
             .and()
             .generatesSources(generatedModel)
@@ -846,8 +846,8 @@ class ViewProcessorTest {
         val generatedModel = JavaFileObjects.forResource("TestAfterBindPropsViewModel_.java".patchResource())
 
         assert_().about(javaSources())
-            .that(asList(model, superModel))
-            .processedWith(EpoxyProcessor())
+            .that(listOf(model, superModel))
+            .processedWith(processors())
             .compilesWithoutError()
             .and()
             .generatesSources(generatedModel)
@@ -871,8 +871,8 @@ class ViewProcessorTest {
         val generatedModel = JavaFileObjects.forResource("TextPropDefaultViewModel_.java".patchResource())
 
         assert_().about(javaSources())
-            .that(asList(model, R))
-            .processedWith(EpoxyProcessor())
+            .that(listOf(model, R))
+            .processedWith(processors())
             .compilesWithoutError()
             .and()
             .generatesSources(generatedModel)
@@ -884,8 +884,8 @@ class ViewProcessorTest {
             .forResource("TextPropDefaultView_throwsForNonStringRes.java".patchResource())
 
         assert_().about(javaSources())
-            .that(asList(model, R))
-            .processedWith(EpoxyProcessor())
+            .that(listOf(model, R))
+            .processedWith(processors())
             .failsToCompile()
             .withErrorContaining("requires a string resource")
     }

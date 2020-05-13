@@ -80,7 +80,7 @@ public class DataBindingModelTest {
 
     assert_().about(javaSources())
         .that(asList(model, BR_CLASS, R))
-        .processedWith(new EpoxyProcessor())
+        .processedWith(new EpoxyProcessor(), new ModelViewProcessor(), new DataBindingProcessor(), new ControllerProcessor())
         .compilesWithoutError()
         .and()
         .generatesSources(generatedModel);
@@ -96,7 +96,8 @@ public class DataBindingModelTest {
 
     assert_().about(javaSources())
         .that(asList(model, BR_CLASS, R))
-        .processedWith(EpoxyProcessor.withNoValidation())
+        .withCompilerOptions(ProcessorTestUtils.options(true, false))
+        .processedWith(ProcessorTestUtils.processors())
         .compilesWithoutError()
         .and()
         .generatesSources(generatedModel);
@@ -115,7 +116,7 @@ public class DataBindingModelTest {
 
     assert_().about(javaSources())
         .that(asList(packageInfo, binding, BR_CLASS, R))
-        .processedWith(new EpoxyProcessor())
+        .processedWith(new EpoxyProcessor(), new ModelViewProcessor(), new DataBindingProcessor(), new ControllerProcessor())
         .compilesWithoutError()
         .and()
         .generatesSources(generatedModel);
@@ -138,7 +139,7 @@ public class DataBindingModelTest {
 
     assert_().about(javaSources())
         .that(asList(packageInfo, binding, BR_CLASS, R))
-        .processedWith(new EpoxyProcessor())
+        .processedWith(new EpoxyProcessor(), new ModelViewProcessor(), new DataBindingProcessor(), new ControllerProcessor())
         .compilesWithoutError()
         .and()
         .generatesSources(generatedModel);

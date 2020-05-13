@@ -58,7 +58,7 @@ public class EpoxyResourceProcessorTest {
 
     assert_().about(javaSources())
         .that(Arrays.asList(model, R))
-        .processedWith(new EpoxyProcessor())
+        .processedWith(new EpoxyProcessor(), new ModelViewProcessor(), new DataBindingProcessor(), new ControllerProcessor())
         .compilesWithoutError()
         .and()
         .generatesSources(generatedModel);
@@ -85,7 +85,7 @@ public class EpoxyResourceProcessorTest {
     assert_().about(javaSources())
         .that(Arrays
             .asList(model, modelWithDifferentRClass, R, R_FROM_DIFFERENT_PACKAGE_WITH_SAME_VALUE))
-        .processedWith(new EpoxyProcessor())
+        .processedWith(new EpoxyProcessor(), new ModelViewProcessor(), new DataBindingProcessor(), new ControllerProcessor())
         .compilesWithoutError()
         .and()
         .generatesSources(generatedModel, generatedModelWithDifferentRClass);

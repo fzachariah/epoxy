@@ -17,8 +17,7 @@ import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
 import kotlin.reflect.KClass
 
-abstract class BaseProcessor(private val testOptions: Map<String, String>? = null) :
-    AbstractProcessor(), Asyncable {
+abstract class BaseProcessor : AbstractProcessor(), Asyncable {
 
     lateinit var messager: Messager
     lateinit var elementUtils: Elements
@@ -81,20 +80,6 @@ abstract class BaseProcessor(private val testOptions: Map<String, String>? = nul
         ConfigManager.PROCESSOR_OPTION_DISABLE_KOTLIN_EXTENSION_GENERATION,
         ConfigManager.PROCESSOR_OPTION_LOG_TIMINGS
     )
-    // if we can make the processor isolating in the future we can take a dynamic approach like this
-//        .let { options ->
-//        if (resourceProcessor.trees != null) {
-//            val incapType = if (configManager.disableKotlinExtensionGeneration()) {
-//                IncrementalAnnotationProcessorType.ISOLATING
-//            } else {
-//                IncrementalAnnotationProcessorType.AGGREGATING
-//            }
-//
-//            options.plus(incapType.processorOption)
-//        } else {
-//            options
-//        }
-//    }
 
     @Synchronized
     override fun init(processingEnv: ProcessingEnvironment) {
@@ -104,7 +89,7 @@ abstract class BaseProcessor(private val testOptions: Map<String, String>? = nul
         messager = processingEnv.messager
         elementUtils = processingEnv.elementUtils
         typeUtils = processingEnv.typeUtils
-        configManager = ConfigManager(testOptions ?: processingEnv.options, elementUtils, typeUtils)
+        configManager = ConfigManager(processingEnv.options, elementUtils, typeUtils)
         resourceProcessor = ResourceProcessor(processingEnv, logger, elementUtils, typeUtils)
     }
 
@@ -135,7 +120,10 @@ abstract class BaseProcessor(private val testOptions: Map<String, String>? = nul
             if (!configManager.disableKotlinExtensionGeneration()) {
                 logger.measure("generateKotlinExtensions") {
                     // TODO: Potentially generate a single file per model to allow for an isolating processor
-                    kotlinExtensionWriter.generateExtensionsForModels(generatedModels, processorName)
+                    kotlinExtensionWriter.generateExtensionsForModels(
+                        generatedModels,
+                        processorName
+                    )
                 }
             }
 

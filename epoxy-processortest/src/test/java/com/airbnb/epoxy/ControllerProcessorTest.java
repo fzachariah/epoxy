@@ -26,7 +26,7 @@ public class ControllerProcessorTest {
 
     assert_().about(javaSources())
         .that(asList(model, controller))
-        .processedWith(new EpoxyProcessor())
+        .processedWith(new EpoxyProcessor(), new ModelViewProcessor(), new DataBindingProcessor(), new ControllerProcessor())
         .compilesWithoutError()
         .and()
         .generatesSources(generatedHelper);
@@ -45,7 +45,8 @@ public class ControllerProcessorTest {
 
     assert_().about(javaSources())
         .that(asList(model, controller))
-        .processedWith(EpoxyProcessor.withNoValidation())
+        .withCompilerOptions(ProcessorTestUtils.options(true, false))
+        .processedWith(ProcessorTestUtils.processors())
         .compilesWithoutError()
         .and()
         .generatesSources(generatedHelper);
@@ -67,7 +68,7 @@ public class ControllerProcessorTest {
 
     assert_().about(javaSources())
         .that(asList(model, controller))
-        .processedWith(new EpoxyProcessor())
+        .processedWith(new EpoxyProcessor(), new ModelViewProcessor(), new DataBindingProcessor(), new ControllerProcessor())
         .compilesWithoutError()
         .and()
         .generatesSources(generatedHelper, generatedSubHelper);
@@ -80,7 +81,7 @@ public class ControllerProcessorTest {
 
     assert_().about(javaSource())
         .that(badClass)
-        .processedWith(new EpoxyProcessor())
+        .processedWith(new EpoxyProcessor(), new ModelViewProcessor(), new DataBindingProcessor(), new ControllerProcessor())
         .failsToCompile();
   }
 
@@ -91,7 +92,7 @@ public class ControllerProcessorTest {
 
     assert_().about(javaSource())
         .that(badClass)
-        .processedWith(new EpoxyProcessor())
+        .processedWith(new EpoxyProcessor(), new ModelViewProcessor(), new DataBindingProcessor(), new ControllerProcessor())
         .failsToCompile();
   }
 
@@ -108,7 +109,8 @@ public class ControllerProcessorTest {
 
     assert_().about(javaSources())
         .that(asList(model, controller))
-        .processedWith(EpoxyProcessor.withImplicitAdding())
+        .withCompilerOptions(ProcessorTestUtils.options(false, true))
+        .processedWith(ProcessorTestUtils.processors())
         .compilesWithoutError()
         .and()
         .generatesSources(generatedHelper);
