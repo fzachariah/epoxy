@@ -1,11 +1,15 @@
 package com.airbnb.epoxy
 
+import com.airbnb.epoxy.processor.ControllerProcessor
+import com.airbnb.epoxy.processor.DataBindingProcessor
+import com.airbnb.epoxy.processor.EpoxyProcessor
+import com.airbnb.epoxy.processor.ModelViewProcessor
 import com.airbnb.paris.processor.ParisProcessor
 import com.google.common.truth.Truth.assert_
 import com.google.testing.compile.JavaFileObjects
 import com.google.testing.compile.JavaSourceSubjectFactory.javaSource
+import com.google.testing.compile.JavaSourcesSubject
 import com.google.testing.compile.JavaSourcesSubjectFactory.javaSources
-import java.util.ArrayList
 import javax.annotation.processing.Processor
 import javax.tools.JavaFileObject
 
@@ -36,29 +40,6 @@ internal object ProcessorTestUtils {
             .compilesWithoutError()
     }
 
-    @JvmOverloads
-    @JvmStatic
-    fun assertGeneration(
-        inputFile: String,
-        generatedFile: String,
-        useParis: Boolean = false,
-        helperObjects: List<JavaFileObject> = emptyList()
-    ) {
-        val model = JavaFileObjects.forResource(inputFile.patchResource())
-
-        val generatedModel = JavaFileObjects.forResource(generatedFile.patchResource())
-
-        val processors = processors(useParis)
-
-        assert_().about(javaSources())
-            .that(helperObjects + listOf(model))
-            .withCompilerOptions()
-            .processedWith(processors)
-            .compilesWithoutError()
-            .and()
-            .generatesSources(generatedModel)
-    }
-
     @JvmStatic
     @JvmOverloads
     fun processors(useParis: Boolean = false): MutableList<Processor> {
@@ -76,42 +57,69 @@ internal object ProcessorTestUtils {
         withNoValidation: Boolean = false,
         withImplicitAdding: Boolean = false
     ): List<String> {
-        infix fun String.setTo(value: Any) = "-A$this=$value"
-
         return mutableListOf<String>().apply {
             if (withNoValidation) add("validateEpoxyModelUsage" setTo false)
             if (withImplicitAdding) add("implicitlyAddAutoModels" setTo true)
         }
     }
 
+    @JvmOverloads
+    @JvmStatic
+    fun assertGeneration(
+        inputFile: String,
+        generatedFile: String,
+        useParis: Boolean = false,
+        helperObjects: List<JavaFileObject> = emptyList()
+    ) {
+        assertGeneration(
+            sourceFileNames = listOf(inputFile),
+            sourceObjects = helperObjects,
+            generatedFileNames = listOf(generatedFile),
+            useParis = useParis
+        )
+    }
+
     @JvmStatic
     fun assertGeneration(
         inputFiles: List<String>,
-        fileNames: List<String>
+        fileNames: List<String>,
+        useParis: Boolean = false
     ) {
-        val sources = ArrayList<JavaFileObject>()
+        assertGeneration(
+            sourceFileNames = inputFiles,
+            generatedFileNames = fileNames,
+            useParis = useParis
+        )
+    }
 
-        for (inputFile in inputFiles) {
-            sources.add(
-                JavaFileObjects
-                    .forResource(inputFile.patchResource())
-            )
-        }
-
-        val generatedFiles = ArrayList<JavaFileObject>()
-        for (i in fileNames.indices) {
-            generatedFiles.add(JavaFileObjects.forResource(fileNames[i].patchResource()))
-        }
+    @JvmName("assertGenerationWithFileObjects")
+    fun assertGeneration(
+        sourceFileNames: List<String> = emptyList(),
+        sourceObjects: List<JavaFileObject> = emptyList(),
+        generatedFileNames: List<String> = emptyList(),
+        generatedFileObjects: List<JavaFileObject> = emptyList(),
+        useParis: Boolean = false
+    ) {
+        val generatedFiles = generatedFileObjects + generatedFileNames.toJavaFileObjects()
 
         assert_().about(javaSources())
-            .that(sources)
-            .processedWith(processors())
+            .that(sourceObjects + sourceFileNames.toJavaFileObjects())
+            .processedWith(processors(useParis))
             .compilesWithoutError()
             .and()
             .generatesSources(
                 generatedFiles[0],
-                *generatedFiles.subList(1, generatedFiles.size)
-                    .toTypedArray()
+                *generatedFiles.drop(1).toTypedArray()
             )
     }
 }
+
+infix fun String.setTo(value: Any) = "-A$this=$value"
+
+fun JavaSourcesSubject.withAnnotationProcessorOptions(vararg option: Pair<String, Any>): JavaSourcesSubject {
+    return withCompilerOptions(option.map { it.first setTo it.second })
+}
+
+fun List<String>.toJavaFileObjects() = map { JavaFileObjects.forResource(it.patchResource()) }
+
+fun javaFile(name: String) = JavaFileObjects.forResource(name.patchResource())

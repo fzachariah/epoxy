@@ -275,9 +275,6 @@ class ViewProcessorTest {
 
     @Test
     fun baseModelWithDiffBind() {
-        val model = JavaFileObjects
-            .forResource("BaseModelView.java".patchResource())
-
         val baseModel = JavaFileObjects.forSourceLines(
             "com.airbnb.epoxy.TestBaseModel", "package com.airbnb.epoxy;\n" +
                 "\n" +
@@ -292,16 +289,11 @@ class ViewProcessorTest {
                 "}"
         )
 
-        val generatedModel = JavaFileObjects.forResource(
-            "BaseModelViewWithSuperDiffBindModel_.java".patchResource()
+        assertGeneration(
+            sourceFileNames = listOf("BaseModelView.java"),
+            sourceObjects = listOf(baseModel),
+            generatedFileNames = listOf("BaseModelViewWithSuperDiffBindModel_.java")
         )
-
-        assert_().about(javaSources())
-            .that(listOf(baseModel, model))
-            .processedWith(processors())
-            .compilesWithoutError()
-            .and()
-            .generatesSources(generatedModel)
     }
 
     @Test
@@ -783,23 +775,22 @@ class ViewProcessorTest {
 
     @Test
     fun generatedModelSuffix() {
-        val model = JavaFileObjects
-            .forSourceLines(
-                "com.airbnb.epoxy.GeneratedModelSuffixView",
-                "package com.airbnb.epoxy;\n" +
-                    "\n" +
-                    "import android.content.Context;\n" +
-                    "import android.view.View;\n" +
-                    "\n" +
-                    "@ModelView\n" +
-                    "public class GeneratedModelSuffixView extends View {\n" +
-                    "\n" +
-                    "  public GeneratedModelSuffixView(Context context) {\n" +
-                    "    super(context);\n" +
-                    "  }\n" +
-                    "\n" +
-                    "}"
-            )
+        val model = JavaFileObjects.forSourceLines(
+            "com.airbnb.epoxy.GeneratedModelSuffixView",
+            "package com.airbnb.epoxy;\n" +
+                "\n" +
+                "import android.content.Context;\n" +
+                "import android.view.View;\n" +
+                "\n" +
+                "@ModelView\n" +
+                "public class GeneratedModelSuffixView extends View {\n" +
+                "\n" +
+                "  public GeneratedModelSuffixView(Context context) {\n" +
+                "    super(context);\n" +
+                "  }\n" +
+                "\n" +
+                "}"
+        )
 
         val R = JavaFileObjects.forSourceString(
             "com.airbnb.epoxy.R", "" +
@@ -811,27 +802,21 @@ class ViewProcessorTest {
                 "}"
         )
 
-        val configClass = JavaFileObjects
-            .forSourceLines(
-                "com.airbnb.epoxy.package-info",
-                "@PackageModelViewConfig(rClass = R" +
-                    ".class, generatedModelSuffix = \"Suffix_\")\n" +
-                    "package com.airbnb.epoxy;\n" +
-                    "\n" +
-                    "import com.airbnb.epoxy.PackageModelViewConfig;\n" +
-                    "import com.airbnb.epoxy.R;\n"
-            )
-
-        val generatedModel = JavaFileObjects.forResource(
-            "GeneratedModelSuffixViewSuffix_.java".patchResource()
+        val configClass = JavaFileObjects.forSourceLines(
+            "com.airbnb.epoxy.package-info",
+            "@PackageModelViewConfig(rClass = R" +
+                ".class, generatedModelSuffix = \"Suffix_\")\n" +
+                "package com.airbnb.epoxy;\n" +
+                "\n" +
+                "import com.airbnb.epoxy.PackageModelViewConfig;\n" +
+                "import com.airbnb.epoxy.R;\n"
         )
 
-        assert_().about(javaSources())
-            .that(listOf(model, configClass, R))
-            .processedWith(processors())
-            .compilesWithoutError()
-            .and()
-            .generatesSources(generatedModel)
+
+        assertGeneration(
+            sourceObjects = listOf(model, configClass, R),
+            generatedFileNames = listOf("GeneratedModelSuffixViewSuffix_.java")
+        )
     }
 
     @Test
