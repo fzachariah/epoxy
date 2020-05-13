@@ -20,7 +20,7 @@ class DataBindingProcessor : BaseProcessor() {
 
     override suspend fun processRound(roundEnv: RoundEnvironment) {
 
-        roundEnv.getElementsAnnotatedWith(EpoxyDataBindingLayouts::class.java)
+        roundEnv.getElementsAnnotatedWithSafe(EpoxyDataBindingLayouts::class)
             .forEach { layoutsAnnotatedElement ->
 
                 val layoutResources = resourceProcessor
@@ -48,7 +48,7 @@ class DataBindingProcessor : BaseProcessor() {
                 }
             }
 
-        roundEnv.getElementsAnnotatedWith(EpoxyDataBindingPattern::class.java)
+        roundEnv.getElementsAnnotatedWithSafe(EpoxyDataBindingPattern::class)
             .forEach { annotatedElement ->
 
                 val patternAnnotation =

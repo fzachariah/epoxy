@@ -37,7 +37,7 @@ class EpoxyProcessor : BaseProcessorWithPackageConfigs() {
         super.processRound(roundEnv)
         val modelClassMap = ConcurrentHashMap<TypeElement, GeneratedModelInfo>()
 
-        roundEnv.getElementsAnnotatedWith(EpoxyAttribute::class.java)
+        roundEnv.getElementsAnnotatedWithSafe(EpoxyAttribute::class)
             .map("Find EpoxyAttribute class") { annotatedElement ->
                 annotatedElement to getOrCreateTargetClass(
                     modelClassMap,
@@ -56,7 +56,7 @@ class EpoxyProcessor : BaseProcessorWithPackageConfigs() {
             }
 
 
-        roundEnv.getElementsAnnotatedWith(EpoxyModelClass::class.java)
+        roundEnv.getElementsAnnotatedWithSafe(EpoxyModelClass::class)
             .map("Process EpoxyModelClass") { clazz ->
                 getOrCreateTargetClass(modelClassMap, clazz as TypeElement)
             }

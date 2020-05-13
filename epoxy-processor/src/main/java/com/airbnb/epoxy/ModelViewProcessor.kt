@@ -66,7 +66,7 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
     }
 
     private suspend fun processViewAnnotations(roundEnv: RoundEnvironment) {
-        roundEnv.getElementsAnnotatedWith(ModelView::class.java)
+        roundEnv.getElementsAnnotatedWithSafe(ModelView::class)
             .forEach("processViewAnnotations") { viewElement ->
                 if (!validateViewElement(viewElement)) {
                     return@forEach
@@ -124,7 +124,7 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
     private fun processSetterAnnotations(roundEnv: RoundEnvironment) {
 
         for (propAnnotation in modelPropAnnotations) {
-            roundEnv.getElementsAnnotatedWith(propAnnotation).forEach { prop ->
+            roundEnv.getElementsAnnotatedWithSafe(propAnnotation).forEach { prop ->
                 // Interfaces can use model property annotations freely, they will be processed if
                 // and when implementors of that interface are processed. This is particularly
                 // useful for Kotlin delegation where the model view class may not be overriding
@@ -159,7 +159,7 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
                     return@forEach
                 }
 
-                if (!validatePropElement(prop, propAnnotation)) {
+                if (!validatePropElement(prop, propAnnotation.java)) {
                     return@forEach
                 }
 
@@ -310,7 +310,7 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
     }
 
     private fun processResetAnnotations(roundEnv: RoundEnvironment) {
-        for (recycleMethod in roundEnv.getElementsAnnotatedWith(OnViewRecycled::class.java)) {
+        for (recycleMethod in roundEnv.getElementsAnnotatedWithSafe(OnViewRecycled::class)){
             if (!validateResetElement(recycleMethod)) {
                 continue
             }
@@ -331,7 +331,7 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
     private fun processVisibilityStateChangedAnnotations(roundEnv: RoundEnvironment) {
         for (
         visibilityMethod in
-        roundEnv.getElementsAnnotatedWith(OnVisibilityStateChanged::class.java)
+        roundEnv.getElementsAnnotatedWithSafe(OnVisibilityStateChanged::class)
         ) {
             if (!validateVisibilityStateChangedElement(visibilityMethod)) {
                 continue
@@ -353,7 +353,7 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
     private fun processVisibilityChangedAnnotations(roundEnv: RoundEnvironment) {
         for (
         visibilityMethod in
-        roundEnv.getElementsAnnotatedWith(OnVisibilityChanged::class.java)
+        roundEnv.getElementsAnnotatedWithSafe(OnVisibilityChanged::class)
         ) {
             if (!validateVisibilityChangedElement(visibilityMethod)) {
                 continue
@@ -373,7 +373,7 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
     }
 
     private fun processAfterBindAnnotations(roundEnv: RoundEnvironment) {
-        for (afterPropsMethod in roundEnv.getElementsAnnotatedWith(AfterPropsSet::class.java)) {
+        for (afterPropsMethod in roundEnv.getElementsAnnotatedWithSafe(AfterPropsSet::class)) {
             if (!validateAfterPropsMethod(afterPropsMethod)) {
                 continue
             }
@@ -409,7 +409,7 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
                 )
 
                 fun forEachElementWithAnnotation(
-                    annotations: List<Class<out Annotation>>,
+                    annotations: List<KClass<out Annotation>>,
                     function: (Element) -> Unit
                 ) {
                     superViewElement.enclosedElementsSynchronized
@@ -437,19 +437,19 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
                     view.addPropIfNotExists(it)
                 }
 
-                forEachElementWithAnnotation(listOf(OnViewRecycled::class.java)) {
+                forEachElementWithAnnotation(listOf(OnViewRecycled::class)) {
                     view.addOnRecycleMethodIfNotExists(it)
                 }
 
-                forEachElementWithAnnotation(listOf(OnVisibilityStateChanged::class.java)) {
+                forEachElementWithAnnotation(listOf(OnVisibilityStateChanged::class)) {
                     view.addOnVisibilityStateChangedMethodIfNotExists(it)
                 }
 
-                forEachElementWithAnnotation(listOf(OnVisibilityChanged::class.java)) {
+                forEachElementWithAnnotation(listOf(OnVisibilityChanged::class)) {
                     view.addOnVisibilityChangedMethodIfNotExists(it)
                 }
 
-                forEachElementWithAnnotation(listOf(AfterPropsSet::class.java)) {
+                forEachElementWithAnnotation(listOf(AfterPropsSet::class)) {
                     view.addAfterPropsSetMethodIfNotExists(it)
                 }
             }
@@ -458,8 +458,8 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
 
     private fun hasAnnotation(
         element: Element,
-        annotations: List<Class<out Annotation>>
-    ): Boolean = annotations.any { element.getAnnotation(it) != null }
+        annotations: List<KClass<out Annotation>>
+    ): Boolean = annotations.any { element.getAnnotation(it.java) != null }
 
     /**
      * If a view defines a base model that its generated model should extend we need to check if that
@@ -532,6 +532,6 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
         val modelPropAnnotations = listOf(
             ModelProp::class, TextProp::class,
             CallbackProp::class
-        ).map { it.java }
+        )
     }
 }

@@ -7,6 +7,7 @@ import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.JavaFile
 import com.squareup.kotlinpoet.FileSpec
 import javax.annotation.processing.Filer
+import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.AnnotatedConstruct
 import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
@@ -129,11 +130,11 @@ fun TypeElement.executableElements() =
     enclosedElementsSynchronized.filterIsInstance<ExecutableElement>()
 
 /** @return Whether at least one of the given annotations is present on the receiver. */
-fun AnnotatedConstruct.hasAnyAnnotation(annotationClasses: List<Class<out Annotation>>) =
+fun AnnotatedConstruct.hasAnyAnnotation(annotationClasses: List<KClass<out Annotation>>) =
     synchronizedForTypeLookup {
         annotationClasses.any {
             try {
-                getAnnotation(it) != null
+                getAnnotation(it.java) != null
             } catch (e: MirroredTypeException) {
                 // This will be thrown if the annotation contains a param of type Class. This is fine,
                 // it still means that the annotation is present
@@ -143,9 +144,6 @@ fun AnnotatedConstruct.hasAnyAnnotation(annotationClasses: List<Class<out Annota
     }
 
 fun AnnotatedConstruct.hasAnnotation(annotationClass: KClass<out Annotation>) =
-    hasAnyAnnotation(listOf(annotationClass.java))
-
-fun AnnotatedConstruct.hasAnnotation(annotationClass: Class<out Annotation>) =
     hasAnyAnnotation(listOf(annotationClass))
 
 inline fun <reified T : Annotation> AnnotatedConstruct.annotation(): T? =
@@ -282,4 +280,16 @@ fun FileSpec.writeSynchronized(filer: Filer) = synchronized(filer) {
     // JavacFiler does not properly synchronize its "Set<FileObject> fileObjectHistory"
     // so parallel writing can throw concurrent modification exceptions.
     writeTo(filer)
+}
+
+fun RoundEnvironment.getElementsAnnotatedWithSafe(annotationClass: KClass<out Annotation>): Set<Element> {
+    return try {
+        getElementsAnnotatedWith(annotationClass.java)
+    } catch (e: Throwable) {
+        if ("bad enclosing method attribute for class com.airbnb.epoxy" in e.localizedMessage) {
+            emptySet()
+        } else {
+            throw e
+        }
+    }
 }

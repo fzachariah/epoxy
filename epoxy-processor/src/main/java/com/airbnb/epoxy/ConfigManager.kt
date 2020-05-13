@@ -74,7 +74,7 @@ class ConfigManager internal constructor(
     fun processPackageEpoxyConfig(roundEnv: RoundEnvironment): List<Exception> {
         val errors = mutableListOf<Exception>()
 
-        for (element in roundEnv.getElementsAnnotatedWith(PackageEpoxyConfig::class.java)) {
+        for (element in roundEnv.getElementsAnnotatedWithSafe(PackageEpoxyConfig::class)) {
             packageEpoxyConfigElements.add(element)
             val packageName = elementUtils.getPackageOf(element).qualifiedName.toString()
             if (configurationMap.containsKey(packageName)) {
@@ -96,7 +96,7 @@ class ConfigManager internal constructor(
     fun processPackageModelViewConfig(roundEnv: RoundEnvironment): List<Exception> {
         val errors = mutableListOf<Exception>()
 
-        for (element in roundEnv.getElementsAnnotatedWith(PackageModelViewConfig::class.java)) {
+        for (element in roundEnv.getElementsAnnotatedWithSafe(PackageModelViewConfig::class)) {
             packageModelViewConfigElements.add(element)
             val packageName = elementUtils.getPackageOf(element).qualifiedName.toString()
             if (modelViewNamingMap.containsKey(packageName)) {
