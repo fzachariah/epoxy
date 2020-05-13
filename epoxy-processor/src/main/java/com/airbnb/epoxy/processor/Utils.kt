@@ -377,6 +377,7 @@ internal object Utils {
             val param1Type: TypeMirror = types.erasure(param1.asType())
 
             val param2Type: TypeMirror = getTypeMirror(param2.type.toString(), elements)
+                ?.let { types.erasure(it) }
                 ?: error("Type mirror does not exist for ${param2.type}")
 
             // If a param is a type variable then we don't need an exact type match, it just needs to
