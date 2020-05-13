@@ -65,6 +65,16 @@ fun getTypeMirror(
     }
 }
 
+fun TypeMirror.toStringSynchronized(): String = synchronized(this) {
+    // This toString method needs to fill in the information from the javac ClassReader
+    // which reads the class file in a non thread safe way.
+    toString()
+}
+
+fun TypeElement.getEnclosedElementsSynchronized(): List<Element> = synchronized(this){
+    return enclosedElements
+}
+
 fun ClassName.asTypeElement(
     elements: Elements
 ): TypeElement? = synchronized(elements) {

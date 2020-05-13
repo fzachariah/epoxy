@@ -78,7 +78,7 @@ class BaseModelAttributeInfo extends AttributeInfo {
       return false;
     }
 
-    for (Element subElement : classElement.getEnclosedElements()) {
+    for (Element subElement : KotlinUtilsKt.getEnclosedElementsSynchronized(classElement)) {
       if (subElement.getKind() == ElementKind.METHOD) {
         ExecutableElement method = (ExecutableElement) subElement;
         if (!method.getModifiers().contains(Modifier.PRIVATE)
@@ -136,7 +136,7 @@ class BaseModelAttributeInfo extends AttributeInfo {
    * Checks if the given private field has getter and setter for access to it
    */
   private void findGetterAndSetterForPrivateField(Logger logger) {
-    for (Element element : classElement.getEnclosedElements()) {
+    for (Element element : KotlinUtilsKt.getEnclosedElementsSynchronized(classElement)) {
       if (element.getKind() == ElementKind.METHOD) {
         ExecutableElement method = (ExecutableElement) element;
         String methodName = method.getSimpleName().toString();

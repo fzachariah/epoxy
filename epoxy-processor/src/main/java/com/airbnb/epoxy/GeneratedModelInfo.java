@@ -90,7 +90,7 @@ public abstract class GeneratedModelInfo {
   protected static List<ConstructorInfo> getClassConstructors(TypeElement classElement) {
     List<ConstructorInfo> constructors = new ArrayList<>(2);
 
-    for (Element subElement : classElement.getEnclosedElements()) {
+    for (Element subElement : KotlinUtilsKt.getEnclosedElementsSynchronized(classElement)) {
       if (subElement.getKind() == ElementKind.CONSTRUCTOR
           && !subElement.getModifiers().contains(Modifier.PRIVATE)) {
 
@@ -111,7 +111,7 @@ public abstract class GeneratedModelInfo {
   protected void collectMethodsReturningClassType(TypeElement modelClass, Types typeUtils) {
     TypeElement clazz = modelClass;
     while (clazz.getSuperclass().getKind() != TypeKind.NONE) {
-      for (Element subElement : clazz.getEnclosedElements()) {
+      for (Element subElement : KotlinUtilsKt.getEnclosedElementsSynchronized(clazz)) {
         Set<Modifier> modifiers = subElement.getModifiers();
         if (subElement.getKind() == ElementKind.METHOD
             && !modifiers.contains(Modifier.PRIVATE)

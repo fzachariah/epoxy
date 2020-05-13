@@ -9,6 +9,15 @@ mavenPublish {
     useLegacyMode = true
 }
 
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
 configurations.all { strategy ->
     strategy.resolutionStrategy.force rootProject.deps.assertj, rootProject.deps.googleTestingCompile
 }

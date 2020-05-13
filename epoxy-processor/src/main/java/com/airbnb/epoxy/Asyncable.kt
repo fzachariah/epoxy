@@ -17,7 +17,14 @@ interface Asyncable {
         val parallelize = parallel && coroutinesEnabled
         return logger.measure(tag, numItems = count(), isParallel = parallelize) {
             if (!parallelize) {
-                mapNotNull { transform(it) }
+                mapNotNull {
+                    try {
+                        transform(it)
+                    } catch (e: Exception) {
+                        logger.logError(e, "$tag failed")
+                        null
+                    }
+                }
             } else {
                 this@map.map {
                     coroutineScope.async { transform(it) }
@@ -35,7 +42,13 @@ interface Asyncable {
         val parallelize = parallel && coroutinesEnabled
         logger.measure(tag, numItems = count(), isParallel = parallelize) {
             if (!parallelize) {
-                this@forEach.forEach { block(it) }
+                forEach {
+                    try {
+                        block(it)
+                    } catch (e: Exception) {
+                        logger.logError(e, "$tag failed")
+                    }
+                }
             } else {
                 map {
                     coroutineScope.async { block(it) }
@@ -52,7 +65,13 @@ interface Asyncable {
         val parallelize = parallel && coroutinesEnabled
         logger.measure(tag, numItems = size, isParallel = parallelize) {
             if (!parallelize) {
-                entries.forEach { block(it.key, it.value) }
+                forEach {
+                    try {
+                        block(it.key, it.value)
+                    } catch (e: Exception) {
+                        logger.logError(e, "$tag failed")
+                    }
+                }
             } else {
                 map { (k, v) ->
                     coroutineScope.async { block(k, v) }
@@ -69,7 +88,14 @@ interface Asyncable {
         val parallelize = parallel && coroutinesEnabled
         return logger.measure(tag, numItems = count(), isParallel = parallelize) {
             if (!parallelize) {
-                mapNotNull { transform(it.key, it.value) }
+                mapNotNull {
+                    try {
+                        transform(it.key, it.value)
+                    } catch (e: Exception) {
+                        logger.logError(e, "$tag failed")
+                        null
+                    }
+                }
             } else {
                 this@map.map {
                     coroutineScope.async { transform(it.key, it.value) }

@@ -228,7 +228,7 @@ internal object Utils {
 
     @JvmStatic
     fun isSubtypeOfType(typeMirror: TypeMirror, otherType: String): Boolean {
-        if (otherType == typeMirror.toString()) {
+        if (otherType == typeMirror.toStringSynchronized()) {
             return true
         }
         if (typeMirror.kind != TypeKind.DECLARED) {
@@ -526,7 +526,7 @@ internal object Utils {
     }
 
     fun isType(typeMirror: TypeMirror, otherType: String): Boolean {
-        return otherType == typeMirror.toString()
+        return otherType == typeMirror.toStringSynchronized()
     }
 
     fun isType(
