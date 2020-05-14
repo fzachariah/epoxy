@@ -290,12 +290,21 @@ internal object Utils {
     /**
      * @return true if and only if the first type is a subtype of the second
      */
+    @JvmStatic
     fun isSubtype(
-        e1: TypeMirror?,
-        e2: TypeMirror?,
+        e1: TypeMirror,
+        e2: TypeMirror,
         types: Types
-    ): Boolean {
+    ): Boolean = synchronizedForTypeLookup {
         return types.isSubtype(e1, types.erasure(e2))
+    }
+
+    fun isAssignable(
+        e1: TypeMirror,
+        e2: TypeMirror,
+        types: Types
+    ): Boolean = synchronizedForTypeLookup {
+        return types.isAssignable(e1, e2)
     }
 
     /**
@@ -376,14 +385,14 @@ internal object Utils {
             val param2: ParameterSpec = params2[i]
             val param1Type: TypeMirror = types.erasure(param1.asType())
 
-            val param2Type: TypeMirror = getTypeMirror(param2.type.toString(), elements)
+            val param2Type: TypeMirror = getTypeMirrorNullable(param2.type.toString(), elements)
                 ?.let { types.erasure(it) }
                 ?: error("Type mirror does not exist for ${param2.type}")
 
             // If a param is a type variable then we don't need an exact type match, it just needs to
             // be assignable
             if (param1.asType().kind == TypeKind.TYPEVAR) {
-                if (!types.isAssignable(param2Type, param1Type)) {
+                if (!isAssignable(param2Type, param1Type, types)) {
                     return false
                 }
             } else if (param1Type.toString() != param2Type.toString()) {
@@ -477,10 +486,10 @@ internal object Utils {
         // Verify containing type.
         if (enclosingElement.kind != ElementKind.CLASS) {
             logger.logError(
-                    "%s annotations may only be contained in classes. (class: %s, field: %s)",
-                    annotationClass.simpleName,
-                    enclosingElement.simpleName, fieldElement.simpleName
-                )
+                "%s annotations may only be contained in classes. (class: %s, field: %s)",
+                annotationClass.simpleName,
+                enclosingElement.simpleName, fieldElement.simpleName
+            )
         }
 
         // Verify containing class visibility is not private.
@@ -533,7 +542,8 @@ internal object Utils {
         typeMirror: TypeMirror,
         clazz: Class<*>
     ): Boolean {
-        val classType: TypeMirror = getTypeMirror(clazz, elements) ?: return false
+        val classType: TypeMirror = getTypeMirrorNullable(clazz, elements)
+            ?: return false
         return types.isSameType(typeMirror, classType)
     }
 

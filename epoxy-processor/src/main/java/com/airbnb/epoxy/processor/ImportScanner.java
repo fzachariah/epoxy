@@ -24,7 +24,10 @@ public class ImportScanner extends ElementScanner7<Void, Void> {
     for(TypeMirror interfaceType : e.getInterfaces()) {
       types.add(interfaceType.toString());
     }
-    types.add(e.getSuperclass().toString());
+
+    TypeMirror superclass = e.getSuperclass();
+    SynchronizationKt.ensureLoaded(superclass);
+    types.add(superclass.toString());
     return super.visitType(e, p);
   }
 

@@ -94,7 +94,7 @@ class BaseModelAttributeInfo extends AttributeInfo {
       }
     }
 
-    Element superClass = typeUtils.asElement(classElement.getSuperclass());
+    Element superClass = KotlinUtilsKt.superClassElement(classElement, typeUtils);
     return (superClass instanceof TypeElement)
         && hasSuperMethod((TypeElement) superClass, attribute);
   }

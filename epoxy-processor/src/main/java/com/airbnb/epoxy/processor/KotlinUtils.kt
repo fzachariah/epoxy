@@ -47,12 +47,18 @@ fun getTypeMirrorNullable(
     return getElementByNameNullable(className, elements, types)?.asType()
 }
 
+fun getTypeMirrorNullable(
+    clazz: Class<*>,
+    elements: Elements
+): TypeMirror? = getTypeMirrorNullable(clazz.canonicalName, elements)
+
 fun getTypeMirror(
     clazz: Class<*>,
     elements: Elements
-): TypeMirror? = getTypeMirror(clazz.canonicalName, elements)
+): TypeMirror = getTypeMirrorNullable(clazz.canonicalName, elements)
+    ?: error("Could not find type mirror for ${clazz.canonicalName}")
 
-fun getTypeMirror(
+fun getTypeMirrorNullable(
     canonicalName: String,
     elements: Elements
 ): TypeMirror? = synchronizedForTypeLookup {
@@ -62,6 +68,9 @@ fun getTypeMirror(
         mte.typeMirror
     }?.ensureLoaded()
 }
+
+fun TypeElement.superClassElement(types: Types): TypeElement? =
+    types.asElement(superclass).ensureLoaded() as TypeElement?
 
 fun ClassName.asTypeElement(
     elements: Elements
@@ -73,7 +82,7 @@ fun Class<*>.asTypeElement(
     elements: Elements,
     types: Types
 ): TypeElement {
-    val typeMirror = getTypeMirror(this, elements)
+    val typeMirror = getTypeMirrorNullable(this, elements)
     return (types.asElement(typeMirror) as TypeElement).ensureLoaded()
 }
 
@@ -158,7 +167,7 @@ private fun String.transformEachChar(
 }
 
 fun Elements.isTypeLoaded(className: ClassName): Boolean {
-    return getTypeMirror(className.reflectionName(), this) != null
+    return getTypeMirrorNullable(className.reflectionName(), this) != null
 }
 
 /** Return each of the classes in the class hierarchy, starting with the initial receiver and working upwards until Any. */

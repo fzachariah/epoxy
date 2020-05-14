@@ -1,6 +1,7 @@
 package com.airbnb.epoxy.processor
 
 import com.airbnb.epoxy.ModelView
+import com.airbnb.epoxy.processor.Utils.isAssignable
 import com.airbnb.epoxy.processor.Utils.isEpoxyModel
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.ParameterizedTypeName
@@ -177,7 +178,7 @@ class ModelViewInfo(
 
         val typeMirror = bounds[0]
         val viewType = getTypeMirror(ClassNames.ANDROID_VIEW, elements, typeUtils)
-        return typeUtils.isAssignable(viewType, typeMirror) || typeUtils.isSubtype(
+        return isAssignable(viewType, typeMirror, typeUtils) || typeUtils.isSubtype(
             typeMirror,
             viewType
         )

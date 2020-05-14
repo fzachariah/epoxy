@@ -7,6 +7,7 @@ import com.airbnb.epoxy.ModelProp.Option
 import com.airbnb.epoxy.TextProp
 import com.airbnb.epoxy.processor.Utils.capitalizeFirstLetter
 import com.airbnb.epoxy.processor.Utils.getDefaultValue
+import com.airbnb.epoxy.processor.Utils.isAssignable
 import com.airbnb.epoxy.processor.Utils.isFieldPackagePrivate
 import com.airbnb.epoxy.processor.Utils.removeSetPrefix
 import com.squareup.javapoet.AnnotationSpec
@@ -16,7 +17,6 @@ import com.squareup.javapoet.CodeBlock
 import com.squareup.javapoet.ParameterizedTypeName
 import com.squareup.javapoet.TypeName
 import com.squareup.javapoet.TypeVariableName
-import java.util.Arrays
 import java.util.HashSet
 import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind
@@ -280,7 +280,7 @@ class ViewAttributeInfo(
             }
 
             // Make sure that the type of the default value is a valid type for the prop
-            if (!types.isAssignable(element.asType(), typeMirror)) {
+            if (!isAssignable(element.asType(), typeMirror, types)) {
                 logger.logError(
                     "The default value for (%s#%s) must be a %s.",
                     modelInfo.viewElement.simpleName, viewAttributeName, typeMirror
@@ -316,8 +316,8 @@ class ViewAttributeInfo(
                 )
         }
 
-        if (options.contains(Option.GenerateStringOverloads) && !types.isAssignable(
-                getTypeMirror(CharSequence::class.java, elements), typeMirror
+        if (options.contains(Option.GenerateStringOverloads) && !isAssignable(
+                getTypeMirror(CharSequence::class.java, elements), typeMirror, types
             )
         ) {
             logger

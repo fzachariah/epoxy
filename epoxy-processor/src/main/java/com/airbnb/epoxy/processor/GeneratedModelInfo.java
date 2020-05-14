@@ -113,7 +113,11 @@ public abstract class GeneratedModelInfo {
    */
   protected void collectMethodsReturningClassType(TypeElement modelClass, Types typeUtils) {
     TypeElement clazz = modelClass;
-    while (clazz.getSuperclass().getKind() != TypeKind.NONE) {
+    while (true) {
+      TypeMirror superclass = clazz.getSuperclass();
+      SynchronizationKt.ensureLoaded(superclass);
+      if (superclass.getKind() == TypeKind.NONE) break;
+
       for (Element subElement : SynchronizationKt.getEnclosedElementsThreadSafe(clazz)) {
         Set<Modifier> modifiers = subElement.getModifiers();
         if (subElement.getKind() == ElementKind.METHOD
@@ -122,7 +126,7 @@ public abstract class GeneratedModelInfo {
             && !modifiers.contains(Modifier.STATIC)) {
           TypeMirror methodReturnType = ((ExecutableType) subElement.asType()).getReturnType();
           if (methodReturnType.equals(clazz.asType())
-              || typeUtils.isSubtype(clazz.asType(), methodReturnType)) {
+              || Utils.isSubtype(clazz.asType(), methodReturnType, typeUtils)) {
             ExecutableElement castedSubElement = ((ExecutableElement) subElement);
             List<? extends VariableElement> params =
                 SynchronizationKt.getParametersThreadSafe(castedSubElement);
@@ -137,7 +141,7 @@ public abstract class GeneratedModelInfo {
           }
         }
       }
-      clazz = (TypeElement) typeUtils.asElement(clazz.getSuperclass());
+      clazz = (TypeElement) typeUtils.asElement(superclass);
     }
   }
 
