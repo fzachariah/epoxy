@@ -1,6 +1,7 @@
 package com.airbnb.epoxy.processor
 
 import com.airbnb.epoxy.EpoxyModelClass
+import com.airbnb.epoxy.processor.GeneratedModelInfo.*
 import com.airbnb.epoxy.processor.Utils.getElementByName
 import com.airbnb.epoxy.processor.Utils.getEpoxyObjectType
 import com.squareup.javapoet.ClassName
@@ -30,7 +31,7 @@ internal class BasicGeneratedModelInfo(
             typeVariableNames.add(TypeVariableName.get(typeParameterElement))
         }
 
-        constructors.addAll(GeneratedModelInfo.getClassConstructors(superClassElement))
+        constructors.addAll(getClassConstructors(superClassElement))
         collectMethodsReturningClassType(superClassElement, types)
 
         if (typeVariableNames.isNotEmpty()) {
@@ -86,7 +87,7 @@ internal class BasicGeneratedModelInfo(
 
         return ClassName.get(
             packageName,
-            className + GeneratedModelInfo.GENERATED_CLASS_NAME_SUFFIX
+            className + GENERATED_CLASS_NAME_SUFFIX
         )
     }
 

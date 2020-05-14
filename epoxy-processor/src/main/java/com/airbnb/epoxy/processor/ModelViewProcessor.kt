@@ -315,7 +315,7 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
         return true
     }
 
-    private fun processResetAnnotations(roundEnv: RoundEnvironment) {
+    private suspend fun processResetAnnotations(roundEnv: RoundEnvironment) {
         for (recycleMethod in roundEnv.getElementsAnnotatedWith(OnViewRecycled::class)) {
             if (!validateResetElement(recycleMethod)) {
                 continue
@@ -334,7 +334,7 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
         }
     }
 
-    private fun processVisibilityStateChangedAnnotations(roundEnv: RoundEnvironment) {
+    private suspend fun processVisibilityStateChangedAnnotations(roundEnv: RoundEnvironment) {
         roundEnv.getElementsAnnotatedWith(OnVisibilityStateChanged::class)
             .forEach { visibilityMethod ->
                 if (!validateVisibilityStateChangedElement(visibilityMethod)) {
@@ -354,7 +354,7 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
             }
     }
 
-    private fun processVisibilityChangedAnnotations(roundEnv: RoundEnvironment) {
+    private suspend fun processVisibilityChangedAnnotations(roundEnv: RoundEnvironment) {
         roundEnv.getElementsAnnotatedWith(OnVisibilityChanged::class)
             .forEach { visibilityMethod ->
                 if (!validateVisibilityChangedElement(visibilityMethod)) {
@@ -374,7 +374,7 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
             }
     }
 
-    private fun processAfterBindAnnotations(roundEnv: RoundEnvironment) {
+    private suspend fun processAfterBindAnnotations(roundEnv: RoundEnvironment) {
         roundEnv.getElementsAnnotatedWith(AfterPropsSet::class).forEach { afterPropsMethod ->
             if (!validateAfterPropsMethod(afterPropsMethod)) {
                 return@forEach

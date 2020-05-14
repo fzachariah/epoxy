@@ -260,19 +260,3 @@ fun TypeElement.findOverload(element: ExecutableElement, paramCount: Int): Execu
 fun TypeElement.hasOverload(element: ExecutableElement, paramCount: Int): Boolean {
     return findOverload(element, paramCount) != null
 }
-
-fun JavaFile.writeSynchronized(filer: Filer) = synchronized(filer) {
-    // JavacFiler does not properly synchronize its "Set<FileObject> fileObjectHistory"
-    // so parallel writing can throw concurrent modification exceptions.
-    writeTo(filer)
-}
-
-fun FileSpec.writeSynchronized(filer: Filer) = synchronized(filer) {
-    // JavacFiler does not properly synchronize its "Set<FileObject> fileObjectHistory"
-    // so parallel writing can throw concurrent modification exceptions.
-    writeTo(filer)
-}
-
-fun RoundEnvironment.getElementsAnnotatedWith(annotation: KClass<out Annotation>): Set<Element> {
-    return getElementsAnnotatedWith(annotation.java).onEach { it.ensureLoaded() }
-}

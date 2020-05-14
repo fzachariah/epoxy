@@ -194,7 +194,7 @@ class ResourceProcessor internal constructor(
     }
 
     val rClassNames: List<ClassName>
-        get() = ArrayList(rClassNameMap.values)
+        get() = rClassNameMap.values.toList()
 
     /**
      * Returns a list of layout resources whose name contains the given layout as a prefix.
@@ -358,20 +358,16 @@ class ResourceProcessor internal constructor(
             element: Element,
             annotationClass: Class<out Annotation>
         ): List<Int> {
-            val annotation = element.getAnnotation(annotationClass)
-
+            element.ensureLoaded()
             // We could do this in a more generic way if we ever need to support more annotation types
-            val layoutResources: MutableList<Int> = ArrayList()
-            when (annotation) {
-                is EpoxyModelClass -> layoutResources.add(annotation.layout)
+            return when (val annotation = element.getAnnotation(annotationClass)) {
+                is EpoxyModelClass -> listOf(annotation.layout)
                 is EpoxyDataBindingLayouts -> {
-                    for (layoutRes in annotation.value) {
-                        layoutResources.add(layoutRes)
-                    }
+                    annotation.value.toList()
                 }
-                is ModelView -> layoutResources.add(annotation.defaultLayout)
+                is ModelView -> listOf(annotation.defaultLayout)
+                else -> emptyList()
             }
-            return layoutResources
         }
     }
 }

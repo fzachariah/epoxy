@@ -10,10 +10,13 @@ import javax.lang.model.element.VariableElement
 import kotlin.reflect.KClass
 import net.ltgt.gradle.incap.IncrementalAnnotationProcessor
 import net.ltgt.gradle.incap.IncrementalAnnotationProcessorType
+import java.util.Collections
 
 @IncrementalAnnotationProcessor(IncrementalAnnotationProcessorType.AGGREGATING)
 class DataBindingProcessor : BaseProcessor() {
-    private val modelsToWrite = ArrayList<DataBindingModelInfo>()
+    private val modelsToWrite = Collections.synchronizedList(
+        mutableListOf<DataBindingModelInfo>()
+    )
 
     override fun supportedAnnotations(): List<KClass<*>> = listOf(
         EpoxyDataBindingLayouts::class,
@@ -23,13 +26,12 @@ class DataBindingProcessor : BaseProcessor() {
     override suspend fun processRound(roundEnv: RoundEnvironment) {
 
         roundEnv.getElementsAnnotatedWith(EpoxyDataBindingLayouts::class)
-            .forEach { layoutsAnnotatedElement ->
+            .map("parse EpoxyDataBindingLayouts") { layoutsAnnotatedElement ->
 
-                val layoutResources = resourceProcessor
-                    .getLayoutsInAnnotation(
-                        layoutsAnnotatedElement,
-                        EpoxyDataBindingLayouts::class.java
-                    )
+                val layoutResources = resourceProcessor.getLayoutsInAnnotation(
+                    layoutsAnnotatedElement,
+                    EpoxyDataBindingLayouts::class.java
+                )
 
                 // Get the module name after parsing resources so we can use the resource classes to
                 // figure out the module name
@@ -38,20 +40,23 @@ class DataBindingProcessor : BaseProcessor() {
                 val enableDoNotHash =
                     layoutsAnnotatedElement.annotation<EpoxyDataBindingLayouts>()?.enableDoNotHash == true
 
-                layoutResources.mapTo(modelsToWrite) { resourceValue ->
+                layoutResources.map { resourceValue ->
                     DataBindingModelInfo(
                         typeUtils = typeUtils,
                         elementUtils = elementUtils,
                         layoutResource = resourceValue,
                         moduleName = moduleName,
                         enableDoNotHash = enableDoNotHash,
-                        annotatedElement = layoutsAnnotatedElement
+                        annotatedElement = layoutsAnnotatedElement,
+                        memoizer = memoizer
                     )
                 }
+            }.let { dataBindingModelInfos ->
+                modelsToWrite.addAll(dataBindingModelInfos.flatten())
             }
 
         roundEnv.getElementsAnnotatedWith(EpoxyDataBindingPattern::class)
-            .forEach { annotatedElement ->
+            .map("parse EpoxyDataBindingPattern") { annotatedElement ->
 
                 val patternAnnotation =
                     annotatedElement.getAnnotation(EpoxyDataBindingPattern::class.java)
@@ -62,7 +67,7 @@ class DataBindingProcessor : BaseProcessor() {
                     EpoxyDataBindingPattern::class.java,
                     "rClass",
                     typeUtils
-                ) ?: return@forEach
+                ) ?: return@map emptyList<DataBindingModelInfo>()
 
                 val moduleName = rClassName.packageName()
                 val layoutClassName = ClassName.get(moduleName, "R", "layout")
@@ -79,7 +84,8 @@ class DataBindingProcessor : BaseProcessor() {
                     .map { it.simpleName.toString() }
                     .filter { it.startsWith(layoutPrefix) }
                     .map { ResourceValue(layoutClassName, it, 0 /* value doesn't matter */) }
-                    .mapTo(modelsToWrite) { layoutResource ->
+                    .toList()
+                    .map("Create DataBindingModelInfo") { layoutResource ->
                         DataBindingModelInfo(
                             typeUtils = typeUtils,
                             elementUtils = elementUtils,
@@ -87,9 +93,12 @@ class DataBindingProcessor : BaseProcessor() {
                             moduleName = moduleName,
                             layoutPrefix = layoutPrefix,
                             enableDoNotHash = enableDoNotHash,
-                            annotatedElement = annotatedElement
+                            annotatedElement = annotatedElement,
+                            memoizer = memoizer
                         )
                     }
+            }.let { dataBindingModelInfos ->
+                modelsToWrite.addAll(dataBindingModelInfos.flatten())
             }
 
         val modelsWritten = resolveDataBindingClassesAndWriteJava()
@@ -104,22 +113,16 @@ class DataBindingProcessor : BaseProcessor() {
         generatedModels.addAll(modelsWritten)
     }
 
-    private fun resolveDataBindingClassesAndWriteJava(): List<DataBindingModelInfo> {
-        return modelsToWrite.filter { bindingModelInfo ->
+    private suspend fun resolveDataBindingClassesAndWriteJava(): List<DataBindingModelInfo> {
+        return modelsToWrite.filter("resolveDataBindingClassesAndWriteJava") { bindingModelInfo ->
             bindingModelInfo.parseDataBindingClass() ?: return@filter false
-
-            try {
-                modelWriter.generateClassForModel(
-                    bindingModelInfo,
-                    originatingElements = bindingModelInfo.originatingElements()
-                )
-            } catch (e: Exception) {
-                logger.logError(e, "Error generating model classes")
-            }
-
+            modelWriter.generateClassForModel(
+                bindingModelInfo,
+                originatingElements = bindingModelInfo.originatingElements()
+            )
             true
-        }.onEach { writtenModel ->
-            modelsToWrite.remove(writtenModel)
+        }.also { writtenModels ->
+            modelsToWrite.removeAll(writtenModels)
         }
     }
 }

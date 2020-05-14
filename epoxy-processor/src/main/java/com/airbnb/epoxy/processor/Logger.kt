@@ -101,7 +101,7 @@ class Logger(val messager: Messager, val logTimings: Boolean) {
         val timingString = timings.joinToString(nesting = 1)
         val totalDuration = timings.sumBy { it.durationMs.toInt() }
         warn(
-            "$processorName completed in $totalDuration ms:\n$timingString"
+            "$processorName completed in $totalDuration ms:\n$timingString\n "
         )
     }
 }

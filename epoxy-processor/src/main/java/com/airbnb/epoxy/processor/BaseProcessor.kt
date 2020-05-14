@@ -13,9 +13,11 @@ import javax.annotation.processing.Messager
 import javax.annotation.processing.ProcessingEnvironment
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.SourceVersion
+import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
 import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
+import kotlin.math.log
 import kotlin.reflect.KClass
 
 abstract class BaseProcessor : AbstractProcessor(), Asyncable {
@@ -48,6 +50,8 @@ abstract class BaseProcessor : AbstractProcessor(), Asyncable {
             this
         )
     }
+
+    val memoizer by lazy { Memoizer(typeUtils, elementUtils) }
 
     private val kotlinExtensionWriter: KotlinModelBuilderExtensionWriter by lazy {
         KotlinModelBuilderExtensionWriter(filer, this)
@@ -153,5 +157,9 @@ abstract class BaseProcessor : AbstractProcessor(), Asyncable {
                     hashCodeValidator.validate(attributeInfo)
                 }
             }
+    }
+
+    suspend fun RoundEnvironment.getElementsAnnotatedWith(annotation: KClass<out Annotation>): Set<Element> {
+        return getElementsAnnotatedWith(logger, annotation)
     }
 }

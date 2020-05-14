@@ -12,7 +12,7 @@ class DataBindingModuleLookup(
     private val logger: Logger,
     private val resourceProcessor: ResourceProcessor
 ) {
-    fun getModuleName(element: Element?): String {
+    fun getModuleName(element: Element): String {
         val packageOf = elements.getPackageOf(element)
         val packageName = packageOf.qualifiedName.toString()
 

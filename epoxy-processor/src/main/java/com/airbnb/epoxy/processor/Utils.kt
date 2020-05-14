@@ -264,10 +264,12 @@ internal object Utils {
      * Checks if two classes belong to the same package
      */
     fun belongToTheSamePackage(
-        class1: TypeElement?,
-        class2: TypeElement?,
+        class1: TypeElement,
+        class2: TypeElement,
         elements: Elements
     ): Boolean {
+        class1.ensureLoaded()
+        class2.ensureLoaded()
         val package1 = elements.getPackageOf(class1).qualifiedName
         val package2 = elements.getPackageOf(class2).qualifiedName
         return package1 == package2
@@ -293,6 +295,8 @@ internal object Utils {
         e2: TypeMirror,
         types: Types
     ): Boolean = synchronizedForTypeLookup {
+        e1.ensureLoaded()
+        e2.ensureLoaded()
         return types.isSubtype(e1, types.erasure(e2))
     }
 
@@ -407,7 +411,7 @@ internal object Utils {
     fun getEpoxyObjectType(
         clazz: TypeElement,
         typeUtils: Types
-    ): TypeMirror? = synchronizedForTypeLookup{
+    ): TypeMirror? = synchronizedForTypeLookup {
         if (clazz.superclass.kind != TypeKind.DECLARED) {
             return null
         }
@@ -583,12 +587,9 @@ internal object Utils {
         annotationClass: Class<out Annotation>
     ): AnnotationMirror? {
         val clazzName = annotationClass.name
-        for (m in typeElement.annotationMirrors) {
-            if (m.annotationType.toString() == clazzName) {
-                return m
-            }
+        return typeElement.annotationMirrors.firstOrNull { m ->
+            m.annotationType.toString() == clazzName
         }
-        return null
     }
 
     private fun getAnnotationValue(

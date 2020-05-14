@@ -17,20 +17,23 @@ internal class DataBindingModelInfo(
     val moduleName: String,
     private val layoutPrefix: String = "",
     val enableDoNotHash: Boolean,
-    val annotatedElement: Element
+    val annotatedElement: Element,
+    val memoizer: Memoizer
 ) : GeneratedModelInfo() {
     private val dataBindingClassName: ClassName
 
-    private val dataBindingClassElement: TypeElement?
-        get() = getElementByNameNullable(dataBindingClassName, elementUtils, typeUtils)
+    private var dataBindingClassElement: TypeElement? = null
+        get() {
+            if (field == null) {
+                field = getElementByNameNullable(dataBindingClassName, elementUtils, typeUtils)
+            }
+            return field
+        }
 
     init {
         dataBindingClassName = getDataBindingClassNameForResource(layoutResource, moduleName)
 
-        superClassElement = Utils.getElementByName(
-            EPOXY_DATA_BINDING_MODEL,
-            elementUtils, typeUtils
-        ) as TypeElement
+        superClassElement = memoizer.epoxyDataBindingModelBaseClass
         superClassName = EPOXY_DATA_BINDING_MODEL
         generatedClassName = buildGeneratedModelName()
         parametrizedClassName = generatedClassName

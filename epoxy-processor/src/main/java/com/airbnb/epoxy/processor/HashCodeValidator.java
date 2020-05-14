@@ -17,6 +17,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
+import static com.airbnb.epoxy.processor.SynchronizationKt.ensureLoaded;
 import static com.airbnb.epoxy.processor.Utils.getMethodOnClass;
 import static com.airbnb.epoxy.processor.Utils.isIterableType;
 import static com.airbnb.epoxy.processor.Utils.isSubtypeOfType;
@@ -50,6 +51,7 @@ class HashCodeValidator {
   }
 
   boolean implementsHashCodeAndEquals(TypeMirror mirror) {
+    ensureLoaded(mirror);
     try {
       validateImplementsHashCode(mirror);
       return true;

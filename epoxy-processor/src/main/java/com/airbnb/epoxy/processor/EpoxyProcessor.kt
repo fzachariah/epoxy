@@ -63,17 +63,9 @@ class EpoxyProcessor : BaseProcessorWithPackageConfigs() {
                 getOrCreateTargetClass(modelClassMap, clazz as TypeElement)
             }
 
-        try {
-            addAttributesFromOtherModules(modelClassMap)
-        } catch (e: Exception) {
-            logger.logError(e)
-        }
+        addAttributesFromOtherModules(modelClassMap)
 
-        try {
-            updateClassesForInheritance(modelClassMap)
-        } catch (e: Exception) {
-            logger.logError(e)
-        }
+        updateClassesForInheritance(modelClassMap)
 
         val modelInfos = modelClassMap.values
 
@@ -117,9 +109,7 @@ class EpoxyProcessor : BaseProcessorWithPackageConfigs() {
     private fun getOrCreateTargetClass(
         modelClassMap: MutableMap<TypeElement, GeneratedModelInfo>,
         classElement: TypeElement
-    ): GeneratedModelInfo = synchronizedByValue(classElement.qualifiedName) {
-        classElement.ensureLoaded()
-
+    ): GeneratedModelInfo = synchronizedByElement(classElement) {
         modelClassMap[classElement]?.let { return it }
 
         val isFinal = classElement.modifiers.contains(Modifier.FINAL)
@@ -175,14 +165,12 @@ class EpoxyProcessor : BaseProcessorWithPackageConfigs() {
      * classes are already found if they are in the same module since the processor will pick them up
      * with the rest of the annotations.
      */
-    private fun addAttributesFromOtherModules(
-        modelClassMap: Map<TypeElement, GeneratedModelInfo>
-    ) {
+    private suspend fun addAttributesFromOtherModules(modelClassMap: Map<TypeElement, GeneratedModelInfo>) {
         // Copy the entries in the original map so we can add new entries to the map while we iterate
         // through the old entries
         val originalEntries = HashSet(modelClassMap.entries)
 
-        for ((currentEpoxyModel, generatedModelInfo) in originalEntries) {
+        originalEntries.forEach("addAttributesFromOtherModules") { (currentEpoxyModel, generatedModelInfo) ->
             // We add just the attribute info to the class in our module. We do NOT want to
             // generate a class for the super class EpoxyModel in the other module since one
             // will be created when that module is processed. If we make one as well there will
@@ -210,30 +198,30 @@ class EpoxyProcessor : BaseProcessorWithPackageConfigs() {
      * One caveat is that if a sub class is in a different package than its super class we can't
      * include attributes that are package private, otherwise the generated class won't compile.
      */
-    private fun updateClassesForInheritance(
+    private suspend fun updateClassesForInheritance(
         helperClassMap: Map<TypeElement, GeneratedModelInfo>
     ) {
-        for ((thisClass, value) in helperClassMap) {
+        helperClassMap.forEach("updateClassesForInheritance") { thisClass, value ->
+            thisClass.ensureLoaded()
 
             val otherClasses = LinkedHashMap(helperClassMap)
             otherClasses.remove(thisClass)
 
-            for ((otherClass, value1) in otherClasses) {
-
-                if (!Utils.isSubtype(thisClass, otherClass, typeUtils)) {
-                    continue
+            otherClasses
+                .filter { (otherClass, _) ->
+                    Utils.isSubtype(thisClass, otherClass, typeUtils)
                 }
+                .forEach { (otherClass, modelInfo) ->
+                    val otherAttributes = modelInfo.getAttributeInfo()
 
-                val otherAttributes = value1.getAttributeInfo()
-
-                if (Utils.belongToTheSamePackage(thisClass, otherClass, elementUtils)) {
-                    value.addAttributes(otherAttributes)
-                } else {
-                    otherAttributes
-                        .filterNot { it.isPackagePrivate }
-                        .forEach { value.addAttribute(it) }
+                    if (Utils.belongToTheSamePackage(thisClass, otherClass, elementUtils)) {
+                        value.addAttributes(otherAttributes)
+                    } else {
+                        otherAttributes
+                            .filterNot { it.isPackagePrivate }
+                            .forEach { value.addAttribute(it) }
+                    }
                 }
-            }
         }
     }
 
@@ -264,7 +252,7 @@ class EpoxyProcessor : BaseProcessorWithPackageConfigs() {
             includeSuperClass: (TypeElement) -> Boolean = { true }
         ): List<AttributeInfo> {
             val result = mutableListOf<AttributeInfo>()
-            var currentSuperClassType: TypeMirror = originatingSuperClassType
+            var currentSuperClassType: TypeMirror = originatingSuperClassType.ensureLoaded()
 
             while (Utils.isEpoxyModel(currentSuperClassType)) {
                 val currentSuperClassElement =
@@ -274,7 +262,9 @@ class EpoxyProcessor : BaseProcessorWithPackageConfigs() {
                     .takeIf(includeSuperClass)
                     ?.enclosedElementsThreadSafe
                     ?.filter { it.getAnnotation(EpoxyAttribute::class.java) != null }
-                    ?.map { buildAttributeInfo(it, logger, typeUtils, elementUtils) }
+                    ?.map {
+                        buildAttributeInfo(it, logger, typeUtils, elementUtils)
+                    }
                     ?.filterTo(result) {
                         // We can't inherit a package private attribute if we're not in the same package
                         !it.isPackagePrivate || modelPackage == elementUtils.getPackageOf(

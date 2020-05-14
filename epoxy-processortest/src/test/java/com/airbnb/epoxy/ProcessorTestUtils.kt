@@ -111,6 +111,22 @@ internal object ProcessorTestUtils {
                 generatedFiles[0],
                 *generatedFiles.drop(1).toTypedArray()
             )
+
+//        assert_().about(javaSources())
+//            .that(sourceObjects + sourceFileNames.toJavaFileObjects())
+//            // Also compile using these flags, since they run different code and could help
+//            // catch concurrency issues.
+//            .withAnnotationProcessorOptions(
+//                "enableParallelEpoxyProcessing" to true,
+//                "logEpoxyTimings" to true
+//            )
+//            .processedWith(processors(useParis))
+//            .compilesWithoutError()
+//            .and()
+//            .generatesSources(
+//                generatedFiles[0],
+//                *generatedFiles.drop(1).toTypedArray()
+//            )
     }
 }
 

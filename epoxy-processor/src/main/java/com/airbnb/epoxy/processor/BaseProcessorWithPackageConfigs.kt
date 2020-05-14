@@ -40,15 +40,16 @@ abstract class BaseProcessorWithPackageConfigs : BaseProcessor() {
         }
     }
 
-    override suspend fun processRound(roundEnv: RoundEnvironment) {
-        if (usesPackageEpoxyConfig) {
-            val errors = configManager.processPackageEpoxyConfig(roundEnv)
-            logger.logErrors(errors)
-        }
+    override suspend fun processRound(roundEnv: RoundEnvironment) =
+        logger.measure("Process package configurations") {
+            if (usesPackageEpoxyConfig) {
+                val errors = configManager.processPackageEpoxyConfig(roundEnv)
+                logger.logErrors(errors)
+            }
 
-        if (usesModelViewConfig) {
-            val errors = configManager.processPackageModelViewConfig(roundEnv)
-            logger.logErrors(errors)
+            if (usesModelViewConfig) {
+                val errors = configManager.processPackageModelViewConfig(roundEnv)
+                logger.logErrors(errors)
+            }
         }
-    }
 }
