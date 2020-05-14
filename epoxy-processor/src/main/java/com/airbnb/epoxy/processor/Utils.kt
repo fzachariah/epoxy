@@ -226,42 +226,39 @@ internal object Utils {
     }
 
     @JvmStatic
-    fun isSubtypeOfType(typeMirror: TypeMirror, otherType: String): Boolean {
-        typeMirror.ensureLoaded()
-        if (otherType == typeMirror.toString()) {
-            return true
-        }
-        if (typeMirror.kind != TypeKind.DECLARED) {
-            return false
-        }
-        val declaredType = typeMirror as DeclaredType
-        val typeArguments = declaredType.typeArguments
-        if (typeArguments.size > 0) {
-            val typeString = StringBuilder(declaredType.asElement().toString())
-            typeString.append('<')
-            for (i in typeArguments.indices) {
-                if (i > 0) {
-                    typeString.append(',')
+    fun isSubtypeOfType(typeMirror: TypeMirror, otherType: String): Boolean =
+        synchronizedForTypeLookup {
+            if (otherType == typeMirror.toString()) {
+                return true
+            }
+            if (typeMirror.kind != TypeKind.DECLARED) {
+                return false
+            }
+            val declaredType = typeMirror as DeclaredType
+            val typeArguments = declaredType.typeArguments
+            if (typeArguments.size > 0) {
+                val typeString = StringBuilder(declaredType.asElement().toString())
+                typeString.append('<')
+                for (i in typeArguments.indices) {
+                    if (i > 0) {
+                        typeString.append(',')
+                    }
+                    typeString.append('?')
                 }
-                typeString.append('?')
+                typeString.append('>')
+                if (typeString.toString() == otherType) {
+                    return true
+                }
             }
-            typeString.append('>')
-            if (typeString.toString() == otherType) {
+            val element = declaredType.asElement() as? TypeElement ?: return false
+            val superType = element.superclass
+            if (isSubtypeOfType(superType, otherType)) {
                 return true
             }
-        }
-        val element = declaredType.asElement() as? TypeElement ?: return false
-        val superType = element.superclass
-        if (isSubtypeOfType(superType, otherType)) {
-            return true
-        }
-        for (interfaceType in element.interfaces) {
-            if (isSubtypeOfType(interfaceType, otherType)) {
-                return true
+            return element.interfaces.any { interfaceType ->
+                isSubtypeOfType(interfaceType, otherType)
             }
         }
-        return false
-    }
 
     /**
      * Checks if two classes belong to the same package
@@ -364,7 +361,7 @@ internal object Utils {
                 return methodElement
             }
         }
-        val superClazz = clazz.getParentClassElement(typeUtils) ?: return null
+        val superClazz = clazz.superClassElement(typeUtils) ?: return null
         return getMethodOnClass(superClazz, method, typeUtils, elements)
     }
 
@@ -405,13 +402,12 @@ internal object Utils {
     /**
      * Returns the type of the Epoxy model.
      *
-     *
      * Eg for "class MyModel extends EpoxyModel<TextView>" it would return TextView.
     </TextView> */
     fun getEpoxyObjectType(
         clazz: TypeElement,
         typeUtils: Types
-    ): TypeMirror? {
+    ): TypeMirror? = synchronizedForTypeLookup{
         if (clazz.superclass.kind != TypeKind.DECLARED) {
             return null
         }
@@ -425,8 +421,7 @@ internal object Utils {
             // We don't allow TypeVar since that is just type letter (eg T).
             return recursiveResult
         }
-        val superTypeArguments =
-            superclass.typeArguments
+        val superTypeArguments = superclass.typeArguments
         if (superTypeArguments.size == 1) {
             // If there is only one type then we use that
             return superTypeArguments[0]

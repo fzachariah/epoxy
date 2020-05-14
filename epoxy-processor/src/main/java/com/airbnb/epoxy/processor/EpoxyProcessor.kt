@@ -188,7 +188,7 @@ class EpoxyProcessor : BaseProcessorWithPackageConfigs() {
             // will be created when that module is processed. If we make one as well there will
             // be a duplicate (causes proguard errors and is just wrong).
             getInheritedEpoxyAttributes(
-                currentEpoxyModel.superclass,
+                currentEpoxyModel.superclass.ensureLoaded(),
                 generatedModelInfo.generatedName.packageName(),
                 typeUtils,
                 elementUtils,
@@ -282,7 +282,7 @@ class EpoxyProcessor : BaseProcessorWithPackageConfigs() {
                         ).qualifiedName.toString()
                     }
 
-                currentSuperClassType = currentSuperClassElement.superclass
+                currentSuperClassType = currentSuperClassElement.superclass.ensureLoaded()
             }
 
             return result

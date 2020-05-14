@@ -247,7 +247,7 @@ class ViewAttributeInfo(
                 }
             }
 
-            viewClass = viewClass.getParentClassElement(types)
+            viewClass = viewClass.superClassElement(types)
         }
 
         logger.logError(

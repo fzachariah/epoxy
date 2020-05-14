@@ -70,7 +70,7 @@ fun getTypeMirrorNullable(
 }
 
 fun TypeElement.superClassElement(types: Types): TypeElement? =
-    types.asElement(superclass).ensureLoaded() as TypeElement?
+    types.asElement(superclass)?.ensureLoaded() as TypeElement?
 
 fun ClassName.asTypeElement(
     elements: Elements
@@ -181,7 +181,7 @@ tailrec fun Element.iterateClassHierarchy(
 
     classCallback(this)
 
-    val superClazz = getParentClassElement(types) ?: return
+    val superClazz = this.superClassElement(types) ?: return
     superClazz.iterateClassHierarchy(types, classCallback)
 }
 
@@ -221,10 +221,6 @@ fun TypeElement.buildAnnotationSpecs(
         .map { AnnotationSpec.get(it) }
         .filter { internalAnnotationFilter(it.type as ClassName) }
 }
-
-fun TypeElement.getParentClassElement(
-    types: Types
-): TypeElement? = types.asElement(superclass) as? TypeElement
 
 /** Similar to the java 8 Map#merge method. */
 fun <K, V> MutableMap<K, V>.putOrMerge(

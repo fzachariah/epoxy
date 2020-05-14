@@ -1292,12 +1292,13 @@ class GeneratedModelWriter(
 
         // This model did not specify a layout in its EpoxyModelClass annotation,
         // but its superclass might
-        val superClass = types.asElement(classElement.superclass) as TypeElement
-        val superClassWithAnnotation = findSuperClassWithClassAnnotation(superClass)
-
-        if (superClassWithAnnotation != null) {
-            return superClassWithAnnotation
-        }
+        val superClass = classElement.superClassElement(types)
+            ?.let { superClass ->
+                findSuperClassWithClassAnnotation(superClass)
+            }
+            ?.let {
+                return it
+            }
 
         logger
             .logError(
