@@ -67,7 +67,8 @@ public abstract class GeneratedModelInfo {
   private ParisStyleAttributeInfo styleBuilderInfo;
 
   /**
-   * An option set via {@link com.airbnb.epoxy.ModelView#autoLayout()} to have Epoxy create the view programmatically
+   * An option set via {@link com.airbnb.epoxy.ModelView#autoLayout()} to have Epoxy create the
+   * view programmatically
    * instead of via xml layout resource inflation.
    */
   Size layoutParams = Size.NONE;
@@ -91,12 +92,13 @@ public abstract class GeneratedModelInfo {
   protected static List<ConstructorInfo> getClassConstructors(TypeElement classElement) {
     List<ConstructorInfo> constructors = new ArrayList<>(2);
 
-    for (Element subElement : KotlinUtilsKt.getEnclosedElementsSynchronized(classElement)) {
+    for (Element subElement : SynchronizationKt.getEnclosedElementsThreadSafe(classElement)) {
       if (subElement.getKind() == ElementKind.CONSTRUCTOR
           && !subElement.getModifiers().contains(Modifier.PRIVATE)) {
 
         ExecutableElement constructor = ((ExecutableElement) subElement);
-        List<? extends VariableElement> params = constructor.getParameters();
+        List<? extends VariableElement> params =
+            SynchronizationKt.getParametersThreadSafe(constructor);
         constructors.add(new ConstructorInfo(subElement.getModifiers(), buildParamSpecs(params),
             constructor.isVarArgs()));
       }
@@ -112,7 +114,7 @@ public abstract class GeneratedModelInfo {
   protected void collectMethodsReturningClassType(TypeElement modelClass, Types typeUtils) {
     TypeElement clazz = modelClass;
     while (clazz.getSuperclass().getKind() != TypeKind.NONE) {
-      for (Element subElement : KotlinUtilsKt.getEnclosedElementsSynchronized(clazz)) {
+      for (Element subElement : SynchronizationKt.getEnclosedElementsThreadSafe(clazz)) {
         Set<Modifier> modifiers = subElement.getModifiers();
         if (subElement.getKind() == ElementKind.METHOD
             && !modifiers.contains(Modifier.PRIVATE)
@@ -122,7 +124,8 @@ public abstract class GeneratedModelInfo {
           if (methodReturnType.equals(clazz.asType())
               || typeUtils.isSubtype(clazz.asType(), methodReturnType)) {
             ExecutableElement castedSubElement = ((ExecutableElement) subElement);
-            List<? extends VariableElement> params = castedSubElement.getParameters();
+            List<? extends VariableElement> params =
+                SynchronizationKt.getParametersThreadSafe(castedSubElement);
             String methodName = subElement.getSimpleName().toString();
             if (methodName.equals(RESET_METHOD) && params.isEmpty()) {
               continue;

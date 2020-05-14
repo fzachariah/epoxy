@@ -117,7 +117,7 @@ internal object Utils {
             elements.getTypeElement(name)
         } catch (mte: MirroredTypeException) {
             types.asElement(mte.typeMirror)
-        }
+        }?.ensureLoaded()
     }
 
     fun getClassName(className: String?): ClassName {
@@ -337,7 +337,7 @@ internal object Utils {
         if (clazz.asType().kind != TypeKind.DECLARED) {
             return null
         }
-        for (subElement in clazz.enclosedElementsSynchronized) {
+        for (subElement in clazz.enclosedElementsThreadSafe) {
             if (subElement.kind == ElementKind.METHOD) {
                 val methodElement = subElement as ExecutableElement
                 if (methodElement.simpleName.toString() != method.name) {
@@ -365,7 +365,7 @@ internal object Utils {
         types: Types,
         elements: Elements
     ): Boolean {
-        val params1 = method1.parametersSynchronized
+        val params1 = method1.parametersThreadSafe
         val params2 = method2.parameters
         if (params1.size != params2.size) {
             return false
@@ -451,8 +451,7 @@ internal object Utils {
         val enclosingElement = fieldElement.enclosingElement as TypeElement
 
         // Verify method modifiers.
-        val modifiers =
-            fieldElement.modifiers
+        val modifiers = fieldElement.modifiers
         if (modifiers.contains(Modifier.PRIVATE) && !skipPrivateFieldCheck || modifiers.contains(
                 Modifier.STATIC
             )
@@ -466,9 +465,7 @@ internal object Utils {
 
         // Nested classes must be static
         if (enclosingElement.nestingKind.isNested) {
-            if (!enclosingElement.modifiers
-                    .contains(Modifier.STATIC)
-            ) {
+            if (!enclosingElement.modifiers.contains(Modifier.STATIC)) {
                 logger.logError(
                     "Nested classes with %s annotations must be static. (class: %s, field: %s)",
                     annotationClass.simpleName,
@@ -479,8 +476,7 @@ internal object Utils {
 
         // Verify containing type.
         if (enclosingElement.kind != ElementKind.CLASS) {
-            logger
-                .logError(
+            logger.logError(
                     "%s annotations may only be contained in classes. (class: %s, field: %s)",
                     annotationClass.simpleName,
                     enclosingElement.simpleName, fieldElement.simpleName
@@ -516,7 +512,7 @@ internal object Utils {
         val method = element as ExecutableElement
         val methodName = method.simpleName.toString()
         return (PATTERN_STARTS_WITH_SET.matcher(methodName).matches()
-            && method.parametersSynchronized.size == 1)
+            && method.parametersThreadSafe.size == 1)
     }
 
     fun removeSetPrefix(string: String): String {

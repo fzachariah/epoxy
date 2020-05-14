@@ -242,7 +242,7 @@ class ResourceProcessor internal constructor(
         synchronizedByValue(rClass) {
             if (rClassResources.containsKey(rClass)) return
 
-            val resourceNames = resourceClass.enclosedElementsSynchronized
+            val resourceNames = resourceClass.enclosedElementsThreadSafe
                 .filterIsInstance<VariableElement>()
                 .map { it.simpleName.toString() }
                 .map {

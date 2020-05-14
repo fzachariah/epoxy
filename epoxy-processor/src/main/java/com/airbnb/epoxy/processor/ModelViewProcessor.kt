@@ -72,7 +72,7 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
     }
 
     private suspend fun processViewAnnotations(roundEnv: RoundEnvironment) {
-        roundEnv.getElementsAnnotatedWith(ModelView::class.java)
+        roundEnv.getElementsAnnotatedWith(ModelView::class)
             .forEach("processViewAnnotations") { viewElement ->
                 if (!validateViewElement(viewElement)) {
                     return@forEach
@@ -89,43 +89,43 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
             }
     }
 
-    private fun validateViewElement(viewElement: Element): Boolean = synchronizedByValue(viewElement){
-        if (viewElement.kind != ElementKind.CLASS || viewElement !is TypeElement) {
-            logger.logError(
-                "${ModelView::class.java} annotations can only be on a class " +
-                    "(element: ${viewElement.simpleName})"
-            )
-            return false
-        }
+    private fun validateViewElement(viewElement: Element): Boolean {
+            if (viewElement.kind != ElementKind.CLASS || viewElement !is TypeElement) {
+                logger.logError(
+                    "${ModelView::class.java} annotations can only be on a class " +
+                        "(element: ${viewElement.simpleName})"
+                )
+                return false
+            }
 
-        val modifiers = viewElement.getModifiers()
-        if (modifiers.contains(PRIVATE)) {
-            logger.logError(
-                "${ModelView::class.java} annotations must not be on private classes. " +
-                    "(class: ${viewElement.getSimpleName()})"
-            )
-            return false
-        }
+            val modifiers = viewElement.getModifiers()
+            if (modifiers.contains(PRIVATE)) {
+                logger.logError(
+                    "${ModelView::class.java} annotations must not be on private classes. " +
+                        "(class: ${viewElement.getSimpleName()})"
+                )
+                return false
+            }
 
-        // Nested classes must be static
-        if (viewElement.nestingKind.isNested) {
-            logger.logError(
-                "Classes with ${ModelView::class.java} annotations cannot be nested. " +
-                    "(class: ${viewElement.getSimpleName()})"
-            )
-            return false
-        }
+            // Nested classes must be static
+            if (viewElement.nestingKind.isNested) {
+                logger.logError(
+                    "Classes with ${ModelView::class.java} annotations cannot be nested. " +
+                        "(class: ${viewElement.getSimpleName()})"
+                )
+                return false
+            }
 
-        if (!isSubtypeOfType(viewElement.asType(), Utils.ANDROID_VIEW_TYPE)) {
-            logger.logError(
-                "Classes with ${ModelView::class.java} annotations must extend " +
-                    "android.view.View. (class: ${viewElement.getSimpleName()})"
-            )
-            return false
-        }
+            if (!isSubtypeOfType(viewElement.asType(), Utils.ANDROID_VIEW_TYPE)) {
+                logger.logError(
+                    "Classes with ${ModelView::class.java} annotations must extend " +
+                        "android.view.View. (class: ${viewElement.getSimpleName()})"
+                )
+                return false
+            }
 
-        return true
-    }
+            return true
+        }
 
     private fun processSetterAnnotations(roundEnv: RoundEnvironment) {
 
@@ -156,7 +156,7 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
                 // However, the JvmOverloads annotation is removed in the java class so we need
                 // to manually look for a valid overload function.
                 if (prop is ExecutableElement &&
-                    prop.parametersSynchronized.isEmpty() &&
+                    prop.parametersThreadSafe.isEmpty() &&
                     info.viewElement.findOverload(
                         prop,
                         1
@@ -276,7 +276,7 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
             return false
         }
 
-        val parameters = element.parametersSynchronized
+        val parameters = element.parametersThreadSafe
         if (parameters.size != paramCount) {
             logger.logError(
                 "Methods annotated with %s must have exactly %s parameter (method: %s)",
@@ -316,7 +316,7 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
     }
 
     private fun processResetAnnotations(roundEnv: RoundEnvironment) {
-        for (recycleMethod in roundEnv.getElementsAnnotatedWith(OnViewRecycled::class.java)){
+        for (recycleMethod in roundEnv.getElementsAnnotatedWith(OnViewRecycled::class)) {
             if (!validateResetElement(recycleMethod)) {
                 continue
             }
@@ -335,53 +335,49 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
     }
 
     private fun processVisibilityStateChangedAnnotations(roundEnv: RoundEnvironment) {
-        for (
-        visibilityMethod in
-        roundEnv.getElementsAnnotatedWith(OnVisibilityStateChanged::class.java)
-        ) {
-            if (!validateVisibilityStateChangedElement(visibilityMethod)) {
-                continue
-            }
+        roundEnv.getElementsAnnotatedWith(OnVisibilityStateChanged::class)
+            .forEach { visibilityMethod ->
+                if (!validateVisibilityStateChangedElement(visibilityMethod)) {
+                    return@forEach
+                }
 
-            val info = getModelInfoForPropElement(visibilityMethod)
-            if (info == null) {
-                logger.logError(
-                    "%s annotation can only be used in classes annotated with %s",
-                    OnVisibilityStateChanged::class.java, ModelView::class.java
-                )
-                continue
-            }
+                val info = getModelInfoForPropElement(visibilityMethod)
+                if (info == null) {
+                    logger.logError(
+                        "%s annotation can only be used in classes annotated with %s",
+                        OnVisibilityStateChanged::class.java, ModelView::class.java
+                    )
+                    return@forEach
+                }
 
-            info.addOnVisibilityStateChangedMethodIfNotExists(visibilityMethod as ExecutableElement)
-        }
+                info.addOnVisibilityStateChangedMethodIfNotExists(visibilityMethod as ExecutableElement)
+            }
     }
 
     private fun processVisibilityChangedAnnotations(roundEnv: RoundEnvironment) {
-        for (
-        visibilityMethod in
-        roundEnv.getElementsAnnotatedWith(OnVisibilityChanged::class.java)
-        ) {
-            if (!validateVisibilityChangedElement(visibilityMethod)) {
-                continue
-            }
+        roundEnv.getElementsAnnotatedWith(OnVisibilityChanged::class)
+            .forEach { visibilityMethod ->
+                if (!validateVisibilityChangedElement(visibilityMethod)) {
+                    return@forEach
+                }
 
-            val info = getModelInfoForPropElement(visibilityMethod)
-            if (info == null) {
-                logger.logError(
-                    "%s annotation can only be used in classes annotated with %s",
-                    OnVisibilityChanged::class.java, ModelView::class.java
-                )
-                continue
-            }
+                val info = getModelInfoForPropElement(visibilityMethod)
+                if (info == null) {
+                    logger.logError(
+                        "%s annotation can only be used in classes annotated with %s",
+                        OnVisibilityChanged::class.java, ModelView::class.java
+                    )
+                    return@forEach
+                }
 
-            info.addOnVisibilityChangedMethodIfNotExists(visibilityMethod as ExecutableElement)
-        }
+                info.addOnVisibilityChangedMethodIfNotExists(visibilityMethod as ExecutableElement)
+            }
     }
 
     private fun processAfterBindAnnotations(roundEnv: RoundEnvironment) {
-        for (afterPropsMethod in roundEnv.getElementsAnnotatedWith(AfterPropsSet::class.java)) {
+        roundEnv.getElementsAnnotatedWith(AfterPropsSet::class).forEach { afterPropsMethod ->
             if (!validateAfterPropsMethod(afterPropsMethod)) {
-                continue
+                return@forEach
             }
 
             val info = getModelInfoForPropElement(afterPropsMethod)
@@ -390,7 +386,7 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
                     "%s annotation can only be used in classes annotated with %s",
                     AfterPropsSet::class.java, ModelView::class.java
                 )
-                continue
+                return@forEach
             }
 
             info.addAfterPropsSetMethodIfNotExists(afterPropsMethod as ExecutableElement)
@@ -418,7 +414,7 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
                     annotations: List<KClass<out Annotation>>,
                     function: (Element) -> Unit
                 ) {
-                    superViewElement.enclosedElementsSynchronized
+                    superViewElement.enclosedElementsThreadSafe
                         .filter {
                             // Make sure we can access the method
                             samePackage || !isFieldPackagePrivate(it)
@@ -500,13 +496,17 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
 
     private fun validateVisibilityStateChangedElement(visibilityMethod: Element): Boolean =
         validateExecutableElement(
-            visibilityMethod, OnVisibilityStateChanged::class.java, 1,
+            visibilityMethod,
+            OnVisibilityStateChanged::class.java,
+            1,
             checkTypeParameters = listOf(TypeKind.INT)
         )
 
     private fun validateVisibilityChangedElement(visibilityMethod: Element): Boolean =
         validateExecutableElement(
-            visibilityMethod, OnVisibilityChanged::class.java, 4,
+            visibilityMethod,
+            OnVisibilityChanged::class.java,
+            4,
             checkTypeParameters = listOf(TypeKind.FLOAT, TypeKind.FLOAT, TypeKind.INT, TypeKind.INT)
         )
 
@@ -520,7 +520,6 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
             modelsToWrite.addAll(it)
             styleableModelsToWrite.removeAll(it)
         }
-
 
         ModelViewWriter(modelWriter, typeUtils, elementUtils, this)
             .writeModels(modelsToWrite, originatingConfigElements())
@@ -536,7 +535,8 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
 
     companion object {
         val modelPropAnnotations = listOf(
-            ModelProp::class, TextProp::class,
+            ModelProp::class,
+            TextProp::class,
             CallbackProp::class
         )
     }

@@ -60,7 +60,7 @@ class ViewAttributeInfo(
 
         val options = HashSet<Option>()
         val param = when (viewAttributeElement) {
-            is ExecutableElement -> viewAttributeElement.parametersSynchronized[0]
+            is ExecutableElement -> viewAttributeElement.parametersThreadSafe[0]
             is VariableElement -> viewAttributeElement
             else -> error("Unsuppported element type $viewAttributeElement")
         }
@@ -241,7 +241,7 @@ class ViewAttributeInfo(
 
         var viewClass: TypeElement? = modelInfo.viewElement
         while (viewClass != null) {
-            for (element in viewClass.enclosedElementsSynchronized) {
+            for (element in viewClass.enclosedElementsThreadSafe) {
                 if (checkElementForConstant(element, defaultConstant, types, logger)) {
                     return
                 }

@@ -50,7 +50,7 @@ internal class ParisStyleAttributeInfo(
 
     private fun findStyleNames(styleBuilderElement: Element): List<ParisStyle> {
         return styleBuilderElement
-            .enclosedElements
+            .enclosedElementsThreadSafe
             .filter {
                 it.kind == ElementKind.METHOD &&
                     it.simpleName.startsWith(BUILDER_STYLE_METHOD_PREFIX)

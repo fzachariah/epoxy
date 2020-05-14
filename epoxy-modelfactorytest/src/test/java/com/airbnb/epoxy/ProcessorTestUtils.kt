@@ -1,5 +1,9 @@
 package com.airbnb.epoxy
 
+import com.airbnb.epoxy.processor.ControllerProcessor
+import com.airbnb.epoxy.processor.DataBindingProcessor
+import com.airbnb.epoxy.processor.EpoxyProcessor
+import com.airbnb.epoxy.processor.ModelViewProcessor
 import com.airbnb.paris.processor.ParisProcessor
 import com.google.common.truth.Truth.assert_
 import com.google.testing.compile.JavaFileObjects

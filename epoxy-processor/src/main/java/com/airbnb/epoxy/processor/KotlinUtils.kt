@@ -1,6 +1,5 @@
 package com.airbnb.epoxy.processor
 
-import com.airbnb.epoxy.processor.Utils.getElementByName
 import com.airbnb.epoxy.processor.Utils.getElementByNameNullable
 import com.squareup.javapoet.AnnotationSpec
 import com.squareup.javapoet.ClassName
@@ -12,7 +11,6 @@ import javax.lang.model.AnnotatedConstruct
 import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
-import javax.lang.model.element.VariableElement
 import javax.lang.model.type.MirroredTypeException
 import javax.lang.model.type.TypeMirror
 import javax.lang.model.util.Elements
@@ -62,25 +60,13 @@ fun getTypeMirror(
         elements.getTypeElement(canonicalName)?.asType()
     } catch (mte: MirroredTypeException) {
         mte.typeMirror
-    }
+    }?.ensureLoaded()
 }
-
-val Element.enclosedElementsSynchronized: List<Element>
-    get() {
-        ensureLoaded()
-        return enclosedElements
-    }
-
-val ExecutableElement.parametersSynchronized: List<VariableElement>
-    get() {
-        ensureLoaded()
-        return parameters
-    }
 
 fun ClassName.asTypeElement(
     elements: Elements
 ): TypeElement? = synchronizedForTypeLookup {
-    elements.getTypeElement(reflectionName())
+    elements.getTypeElement(reflectionName())?.ensureLoaded()
 }
 
 fun Class<*>.asTypeElement(
@@ -88,7 +74,7 @@ fun Class<*>.asTypeElement(
     types: Types
 ): TypeElement {
     val typeMirror = getTypeMirror(this, elements)
-    return types.asElement(typeMirror) as TypeElement
+    return (types.asElement(typeMirror) as TypeElement).ensureLoaded()
 }
 
 fun KClass<*>.asTypeElement(
@@ -127,7 +113,7 @@ fun String.toUpperCamelCase(): String {
 }
 
 fun TypeElement.executableElements() =
-    enclosedElementsSynchronized.filterIsInstance<ExecutableElement>()
+    enclosedElementsThreadSafe.filterIsInstance<ExecutableElement>()
 
 /** @return Whether at least one of the given annotations is present on the receiver. */
 fun AnnotatedConstruct.hasAnyAnnotation(annotationClasses: List<KClass<out Annotation>>) =
@@ -251,7 +237,7 @@ fun <K, V> MutableMap<K, V>.putOrMerge(
  * True if the two elements represent overloads of the same function in a class.
  */
 fun areOverloads(e1: ExecutableElement, e2: ExecutableElement): Boolean {
-    return e1.parametersSynchronized.size != e2.parametersSynchronized.size &&
+    return e1.parametersThreadSafe.size != e2.parametersThreadSafe.size &&
         e1.simpleName == e2.simpleName &&
         e1.enclosingElement == e2.enclosingElement &&
         e1.returnType == e2.returnType &&
@@ -259,11 +245,11 @@ fun areOverloads(e1: ExecutableElement, e2: ExecutableElement): Boolean {
 }
 
 fun TypeElement.findOverload(element: ExecutableElement, paramCount: Int): ExecutableElement? {
-    require(element.parametersSynchronized.size != paramCount) { "Element $element already has param count $paramCount" }
+    require(element.parametersThreadSafe.size != paramCount) { "Element $element already has param count $paramCount" }
 
-    return enclosedElementsSynchronized
+    return enclosedElementsThreadSafe
         .filterIsInstance<ExecutableElement>()
-        .firstOrNull { it.parametersSynchronized.size == paramCount && areOverloads(it, element) }
+        .firstOrNull { it.parametersThreadSafe.size == paramCount && areOverloads(it, element) }
 }
 
 fun TypeElement.hasOverload(element: ExecutableElement, paramCount: Int): Boolean {
@@ -280,4 +266,8 @@ fun FileSpec.writeSynchronized(filer: Filer) = synchronized(filer) {
     // JavacFiler does not properly synchronize its "Set<FileObject> fileObjectHistory"
     // so parallel writing can throw concurrent modification exceptions.
     writeTo(filer)
+}
+
+fun RoundEnvironment.getElementsAnnotatedWith(annotation: KClass<out Annotation>): Set<Element> {
+    return getElementsAnnotatedWith(annotation.java).onEach { it.ensureLoaded() }
 }

@@ -3,6 +3,8 @@ package com.airbnb.epoxy.processor
 import com.sun.tools.javac.code.Symbol
 import com.sun.tools.javac.code.Type
 import javax.lang.model.element.Element
+import javax.lang.model.element.ExecutableElement
+import javax.lang.model.element.VariableElement
 import javax.lang.model.type.TypeMirror
 
 class Mutex
@@ -33,9 +35,9 @@ inline fun <R> synchronizedForTypeLookup(block: () -> R): R {
 fun <T : Element> T.ensureLoaded(): T {
     if (!synchronizationEnabled || this !is Symbol) return this
 
-    val completer = completer ?: return this
+    completer ?: return this
 
-    synchronized(completer) {
+    synchronizedForTypeLookup {
         complete()
     }
 
@@ -43,13 +45,34 @@ fun <T : Element> T.ensureLoaded(): T {
 }
 
 fun <T : TypeMirror> T.ensureLoaded(): T {
-    if (this !is Type) return this
+    if (!synchronizationEnabled || this !is Type) return this
 
-    val completer = tsym?.completer ?: return this
+    tsym?.completer ?: return this
 
-    synchronized(completer) {
+    synchronizedForTypeLookup {
         complete()
     }
 
     return this
 }
+
+val Element.enclosedElementsThreadSafe: List<Element>
+    get() {
+        return synchronizedForTypeLookup {
+            enclosedElements
+        }
+    }
+
+val ExecutableElement.parametersThreadSafe: List<VariableElement>
+    get() {
+        ensureLoaded()
+        return if (!synchronizationEnabled || (this is Symbol.MethodSymbol && params != null)) {
+            parameters
+        } else {
+            // After being initially loaded, parameters are lazily built into a list and stored
+            // as a class field
+            synchronizedForTypeLookup {
+                parameters
+            }
+        }
+    }

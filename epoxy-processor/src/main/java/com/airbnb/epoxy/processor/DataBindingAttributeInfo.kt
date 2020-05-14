@@ -11,7 +11,7 @@ internal class DataBindingAttributeInfo(
 
     init {
         fieldName = removeSetPrefix(setterMethod.simpleName.toString())
-        typeMirror = setterMethod.parametersSynchronized[0].asType()
+        typeMirror = setterMethod.parametersThreadSafe[0].asType()
         modelName = modelInfo.generatedName.simpleName()
         packageName = modelInfo.generatedName.packageName()
         useInHash = !modelInfo.enableDoNotHash ||

@@ -39,7 +39,7 @@ class EpoxyProcessor : BaseProcessorWithPackageConfigs() {
         super.processRound(roundEnv)
         val modelClassMap = ConcurrentHashMap<TypeElement, GeneratedModelInfo>()
 
-        roundEnv.getElementsAnnotatedWith(EpoxyAttribute::class.java)
+        roundEnv.getElementsAnnotatedWith(EpoxyAttribute::class)
             .map("Find EpoxyAttribute class") { annotatedElement ->
                 annotatedElement to getOrCreateTargetClass(
                     modelClassMap,
@@ -58,7 +58,7 @@ class EpoxyProcessor : BaseProcessorWithPackageConfigs() {
             }
 
 
-        roundEnv.getElementsAnnotatedWith(EpoxyModelClass::class.java)
+        roundEnv.getElementsAnnotatedWith(EpoxyModelClass::class)
             .map("Process EpoxyModelClass") { clazz ->
                 getOrCreateTargetClass(modelClassMap, clazz as TypeElement)
             }
@@ -105,7 +105,6 @@ class EpoxyProcessor : BaseProcessorWithPackageConfigs() {
             .let { styleableModelsToWrite.removeAll(it) }
 
         generatedModels.addAll(modelClassMap.values)
-        Unit
     }
 
     private fun writeModel(modelInfo: GeneratedModelInfo) {
@@ -118,7 +117,8 @@ class EpoxyProcessor : BaseProcessorWithPackageConfigs() {
     private fun getOrCreateTargetClass(
         modelClassMap: MutableMap<TypeElement, GeneratedModelInfo>,
         classElement: TypeElement
-    ): GeneratedModelInfo = synchronizedByValue(classElement){
+    ): GeneratedModelInfo = synchronizedByValue(classElement.qualifiedName) {
+        classElement.ensureLoaded()
 
         modelClassMap[classElement]?.let { return it }
 
@@ -272,7 +272,7 @@ class EpoxyProcessor : BaseProcessorWithPackageConfigs() {
 
                 currentSuperClassElement
                     .takeIf(includeSuperClass)
-                    ?.enclosedElementsSynchronized
+                    ?.enclosedElementsThreadSafe
                     ?.filter { it.getAnnotation(EpoxyAttribute::class.java) != null }
                     ?.map { buildAttributeInfo(it, logger, typeUtils, elementUtils) }
                     ?.filterTo(result) {

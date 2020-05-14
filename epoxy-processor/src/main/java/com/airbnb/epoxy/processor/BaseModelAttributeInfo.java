@@ -4,6 +4,7 @@ import com.airbnb.epoxy.EpoxyAttribute;
 import com.airbnb.epoxy.EpoxyAttribute.Option;
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
+import com.sun.corba.se.impl.orbutil.concurrent.Sync;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
@@ -18,6 +19,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -79,13 +81,14 @@ class BaseModelAttributeInfo extends AttributeInfo {
       return false;
     }
 
-    for (Element subElement : KotlinUtilsKt.getEnclosedElementsSynchronized(classElement)) {
+    for (Element subElement : SynchronizationKt.getEnclosedElementsThreadSafe(classElement)) {
       if (subElement.getKind() == ElementKind.METHOD) {
         ExecutableElement method = (ExecutableElement) subElement;
+        List<VariableElement> parameters = SynchronizationKt.getParametersThreadSafe(method);
         if (!method.getModifiers().contains(Modifier.PRIVATE)
             && method.getSimpleName().toString().equals(attribute.getSimpleName().toString())
-            && method.getParameters().size() == 1
-            && method.getParameters().get(0).asType().equals(attribute.asType())) {
+            && parameters.size() == 1
+            && parameters.get(0).asType().equals(attribute.asType())) {
           return true;
         }
       }
@@ -137,17 +140,19 @@ class BaseModelAttributeInfo extends AttributeInfo {
    * Checks if the given private field has getter and setter for access to it
    */
   private void findGetterAndSetterForPrivateField(Logger logger) {
-    for (Element element : KotlinUtilsKt.getEnclosedElementsSynchronized(classElement)) {
+    for (Element element : SynchronizationKt.getEnclosedElementsThreadSafe(classElement)) {
       if (element.getKind() == ElementKind.METHOD) {
         ExecutableElement method = (ExecutableElement) element;
         String methodName = method.getSimpleName().toString();
+        List<VariableElement> parameters = SynchronizationKt.getParametersThreadSafe(method);
+
         // check if it is a valid getter
         if ((methodName.equals(String.format("get%s", capitalizeFirstLetter(getFieldName())))
             || methodName.equals(String.format("is%s", capitalizeFirstLetter(getFieldName())))
             || (methodName.equals(getFieldName()) && startsWithIs(getFieldName())))
             && !method.getModifiers().contains(PRIVATE)
             && !method.getModifiers().contains(STATIC)
-            && method.getParameters().isEmpty()) {
+            && parameters.isEmpty()) {
           setGetterMethodName(methodName);
         }
         // check if it is a valid setter
@@ -156,7 +161,7 @@ class BaseModelAttributeInfo extends AttributeInfo {
             getFieldName().substring(2, getFieldName().length())))))
             && !method.getModifiers().contains(PRIVATE)
             && !method.getModifiers().contains(STATIC)
-            && method.getParameters().size() == 1) {
+            && parameters.size() == 1) {
           setSetterMethodName(methodName);
         }
       }

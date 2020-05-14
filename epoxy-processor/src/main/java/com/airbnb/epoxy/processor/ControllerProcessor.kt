@@ -35,7 +35,7 @@ class ControllerProcessor : BaseProcessorWithPackageConfigs() {
         super.processRound(roundEnv)
         val controllerClassMap: MutableMap<TypeElement, ControllerClassInfo> = LinkedHashMap()
 
-        for (modelFieldElement in roundEnv.getElementsAnnotatedWith(AutoModel::class.java)) {
+        for (modelFieldElement in roundEnv.getElementsAnnotatedWith(AutoModel::class)) {
             try {
                 addFieldToControllerClass(modelFieldElement, controllerClassMap)
             } catch (e: Exception) {
