@@ -103,10 +103,10 @@ class ViewAttributeInfo(
         isPackagePrivate = isFieldPackagePrivate(viewAttributeElement)
         isGenerated = true
 
-        useInHash = !options.contains(Option.DoNotHash)
-        ignoreRequireHashCode = options.contains(Option.IgnoreRequireHashCode)
-        resetWithNull = options.contains(Option.NullOnRecycle)
-        generateStringOverloads = options.contains(Option.GenerateStringOverloads)
+        useInHash = Option.DoNotHash !in options
+        ignoreRequireHashCode = Option.IgnoreRequireHashCode in options
+        resetWithNull = Option.NullOnRecycle in options
+        generateStringOverloads = Option.GenerateStringOverloads in options
 
         modelName = modelInfo.generatedName.simpleName()
         packageName = modelInfo.generatedClassName.packageName()

@@ -96,7 +96,7 @@ val ExecutableElement.parametersThreadSafe: List<VariableElement>
             // After being initially loaded, parameters are lazily built into a list and stored
             // as a class field
             synchronizedForTypeLookup {
-                parameters
+                parameters.onEach { it.ensureLoaded() }
             }
         }
     }

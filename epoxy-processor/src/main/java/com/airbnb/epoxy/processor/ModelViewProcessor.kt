@@ -91,87 +91,88 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
     }
 
     private fun validateViewElement(viewElement: Element): Boolean {
-            if (viewElement.kind != ElementKind.CLASS || viewElement !is TypeElement) {
-                logger.logError(
-                    "${ModelView::class.java} annotations can only be on a class " +
-                        "(element: ${viewElement.simpleName})"
-                )
-                return false
-            }
-
-            val modifiers = viewElement.getModifiers()
-            if (modifiers.contains(PRIVATE)) {
-                logger.logError(
-                    "${ModelView::class.java} annotations must not be on private classes. " +
-                        "(class: ${viewElement.getSimpleName()})"
-                )
-                return false
-            }
-
-            // Nested classes must be static
-            if (viewElement.nestingKind.isNested) {
-                logger.logError(
-                    "Classes with ${ModelView::class.java} annotations cannot be nested. " +
-                        "(class: ${viewElement.getSimpleName()})"
-                )
-                return false
-            }
-
-            if (!isSubtypeOfType(viewElement.asType(), Utils.ANDROID_VIEW_TYPE)) {
-                logger.logError(
-                    "Classes with ${ModelView::class.java} annotations must extend " +
-                        "android.view.View. (class: ${viewElement.getSimpleName()})"
-                )
-                return false
-            }
-
-            return true
+        if (viewElement.kind != ElementKind.CLASS || viewElement !is TypeElement) {
+            logger.logError(
+                "${ModelView::class.java} annotations can only be on a class " +
+                    "(element: ${viewElement.simpleName})"
+            )
+            return false
         }
 
-    private fun processSetterAnnotations(roundEnv: RoundEnvironment) {
+        val modifiers = viewElement.getModifiers()
+        if (modifiers.contains(PRIVATE)) {
+            logger.logError(
+                "${ModelView::class.java} annotations must not be on private classes. " +
+                    "(class: ${viewElement.getSimpleName()})"
+            )
+            return false
+        }
+
+        // Nested classes must be static
+        if (viewElement.nestingKind.isNested) {
+            logger.logError(
+                "Classes with ${ModelView::class.java} annotations cannot be nested. " +
+                    "(class: ${viewElement.getSimpleName()})"
+            )
+            return false
+        }
+
+        if (!isSubtypeOfType(viewElement.asType(), Utils.ANDROID_VIEW_TYPE)) {
+            logger.logError(
+                "Classes with ${ModelView::class.java} annotations must extend " +
+                    "android.view.View. (class: ${viewElement.getSimpleName()})"
+            )
+            return false
+        }
+
+        return true
+    }
+
+    private suspend fun processSetterAnnotations(roundEnv: RoundEnvironment) {
 
         for (propAnnotation in modelPropAnnotations) {
-            roundEnv.getElementsAnnotatedWith(propAnnotation.java).forEach { prop ->
-                // Interfaces can use model property annotations freely, they will be processed if
-                // and when implementors of that interface are processed. This is particularly
-                // useful for Kotlin delegation where the model view class may not be overriding
-                // the interface properties directly, and so doesn't have an opportunity to annotate
-                // them with Epoxy model property annotations.
-                if (prop.enclosingElement.kind == ElementKind.INTERFACE) {
-                    return@forEach
-                }
+            roundEnv.getElementsAnnotatedWith(propAnnotation)
+                .forEach("Process ${propAnnotation.simpleName}") { prop ->
+                    // Interfaces can use model property annotations freely, they will be processed if
+                    // and when implementors of that interface are processed. This is particularly
+                    // useful for Kotlin delegation where the model view class may not be overriding
+                    // the interface properties directly, and so doesn't have an opportunity to annotate
+                    // them with Epoxy model property annotations.
+                    if (prop.enclosingElement.kind == ElementKind.INTERFACE) {
+                        return@forEach
+                    }
 
-                val info = getModelInfoForPropElement(prop)
-                if (info == null) {
-                    logger.logError(
-                        "${propAnnotation.simpleName} annotation can only be used in classes " +
-                            "annotated with ${ModelView::class.java.simpleName} " +
-                            "(${prop.enclosingElement.simpleName}#${prop.simpleName})"
-                    )
-                    return@forEach
-                }
+                    val info = getModelInfoForPropElement(prop)
+                    if (info == null) {
+                        logger.logError(
+                            "${propAnnotation.simpleName} annotation can only be used in classes " +
+                                "annotated with ${ModelView::class.java.simpleName} " +
+                                "(${prop.enclosingElement.simpleName}#${prop.simpleName})"
+                        )
+                        return@forEach
+                    }
 
-                // JvmOverloads is used on properties with default arguments, which we support.
-                // However, the generated no arg version of the function will also have the
-                // @ModelProp annotation so we need to ignore it when it is processed.
-                // However, the JvmOverloads annotation is removed in the java class so we need
-                // to manually look for a valid overload function.
-                if (prop is ExecutableElement &&
-                    prop.parametersThreadSafe.isEmpty() &&
-                    info.viewElement.findOverload(
-                        prop,
-                        1
-                    )?.hasAnyAnnotation(modelPropAnnotations) == true
-                ) {
-                    return@forEach
-                }
+                    // JvmOverloads is used on properties with default arguments, which we support.
+                    // However, the generated no arg version of the function will also have the
+                    // @ModelProp annotation so we need to ignore it when it is processed.
+                    // However, the JvmOverloads annotation is removed in the java class so we need
+                    // to manually look for a valid overload function.
+                    if (prop is ExecutableElement &&
+                        prop.parametersThreadSafe.isEmpty() &&
+                        info.viewElement.findOverload(
+                            prop,
+                            1
+                        )?.hasAnyAnnotation(modelPropAnnotations) == true
+                    ) {
+                        return@forEach
+                    }
 
-                if (!validatePropElement(prop, propAnnotation.java)) {
-                    return@forEach
-                }
+                    if (!validatePropElement(prop, propAnnotation.java)) {
+                        return@forEach
+                    }
 
-                info.addProp(prop)
-            }
+                    info.addProp(prop)
+                }
         }
     }
 
@@ -317,27 +318,28 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
     }
 
     private suspend fun processResetAnnotations(roundEnv: RoundEnvironment) {
-        for (recycleMethod in roundEnv.getElementsAnnotatedWith(OnViewRecycled::class)) {
-            if (!validateResetElement(recycleMethod)) {
-                continue
-            }
+        roundEnv.getElementsAnnotatedWith(OnViewRecycled::class)
+            .forEach("processResetAnnotations") { recycleMethod ->
+                if (!validateResetElement(recycleMethod)) {
+                    return@forEach
+                }
 
-            val info = getModelInfoForPropElement(recycleMethod)
-            if (info == null) {
-                logger.logError(
-                    "%s annotation can only be used in classes annotated with %s",
-                    OnViewRecycled::class.java, ModelView::class.java
-                )
-                continue
-            }
+                val info = getModelInfoForPropElement(recycleMethod)
+                if (info == null) {
+                    logger.logError(
+                        "%s annotation can only be used in classes annotated with %s",
+                        OnViewRecycled::class.java, ModelView::class.java
+                    )
+                    return@forEach
+                }
 
-            info.addOnRecycleMethodIfNotExists(recycleMethod as ExecutableElement)
-        }
+                info.addOnRecycleMethod(recycleMethod as ExecutableElement)
+            }
     }
 
     private suspend fun processVisibilityStateChangedAnnotations(roundEnv: RoundEnvironment) {
         roundEnv.getElementsAnnotatedWith(OnVisibilityStateChanged::class)
-            .forEach { visibilityMethod ->
+            .forEach("processVisibilityStateChangedAnnotations") { visibilityMethod ->
                 if (!validateVisibilityStateChangedElement(visibilityMethod)) {
                     return@forEach
                 }
@@ -351,13 +353,13 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
                     return@forEach
                 }
 
-                info.addOnVisibilityStateChangedMethodIfNotExists(visibilityMethod as ExecutableElement)
+                info.addOnVisibilityStateChangedMethod(visibilityMethod as ExecutableElement)
             }
     }
 
     private suspend fun processVisibilityChangedAnnotations(roundEnv: RoundEnvironment) {
         roundEnv.getElementsAnnotatedWith(OnVisibilityChanged::class)
-            .forEach { visibilityMethod ->
+            .forEach("processVisibilityChangedAnnotations") { visibilityMethod ->
                 if (!validateVisibilityChangedElement(visibilityMethod)) {
                     return@forEach
                 }
@@ -371,43 +373,44 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
                     return@forEach
                 }
 
-                info.addOnVisibilityChangedMethodIfNotExists(visibilityMethod as ExecutableElement)
+                info.addOnVisibilityChangedMethod(visibilityMethod as ExecutableElement)
             }
     }
 
     private suspend fun processAfterBindAnnotations(roundEnv: RoundEnvironment) {
-        roundEnv.getElementsAnnotatedWith(AfterPropsSet::class).forEach { afterPropsMethod ->
-            if (!validateAfterPropsMethod(afterPropsMethod)) {
-                return@forEach
-            }
+        roundEnv.getElementsAnnotatedWith(AfterPropsSet::class)
+            .forEach("processAfterBindAnnotations") { afterPropsMethod ->
+                if (!validateAfterPropsMethod(afterPropsMethod)) {
+                    return@forEach
+                }
 
-            val info = getModelInfoForPropElement(afterPropsMethod)
-            if (info == null) {
-                logger.logError(
-                    "%s annotation can only be used in classes annotated with %s",
-                    AfterPropsSet::class.java, ModelView::class.java
-                )
-                return@forEach
-            }
+                val info = getModelInfoForPropElement(afterPropsMethod)
+                if (info == null) {
+                    logger.logError(
+                        "%s annotation can only be used in classes annotated with %s",
+                        AfterPropsSet::class.java, ModelView::class.java
+                    )
+                    return@forEach
+                }
 
-            info.addAfterPropsSetMethodIfNotExists(afterPropsMethod as ExecutableElement)
-        }
+                info.addAfterPropsSetMethod(afterPropsMethod as ExecutableElement)
+            }
     }
 
     private fun validateAfterPropsMethod(resetMethod: Element): Boolean =
         validateExecutableElement(resetMethod, AfterPropsSet::class.java, 0)
 
     /** Include props and reset methods from super class views.  */
-    private fun updateViewsForInheritedViewAnnotations() {
-        for (view in modelClassMap.values) {
-
+    private suspend fun updateViewsForInheritedViewAnnotations() {
+        modelClassMap.values.forEach("updateViewsForInheritedViewAnnotations") { view ->
             // We walk up the super class tree and look for any elements with epoxy annotations.
             // This approach lets us capture views that we've already processed as well as views
             // in other libraries that we wouldn't have otherwise processed.
 
             view.viewElement.iterateSuperClasses(typeUtils) { superViewElement ->
                 val samePackage = belongToTheSamePackage(
-                    view.viewElement, superViewElement,
+                    view.viewElement,
+                    superViewElement,
                     elementUtils
                 )
 
@@ -441,19 +444,19 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
                 }
 
                 forEachElementWithAnnotation(listOf(OnViewRecycled::class)) {
-                    view.addOnRecycleMethodIfNotExists(it)
+                    view.addOnRecycleMethod(it)
                 }
 
                 forEachElementWithAnnotation(listOf(OnVisibilityStateChanged::class)) {
-                    view.addOnVisibilityStateChangedMethodIfNotExists(it)
+                    view.addOnVisibilityStateChangedMethod(it)
                 }
 
                 forEachElementWithAnnotation(listOf(OnVisibilityChanged::class)) {
-                    view.addOnVisibilityChangedMethodIfNotExists(it)
+                    view.addOnVisibilityChangedMethod(it)
                 }
 
                 forEachElementWithAnnotation(listOf(AfterPropsSet::class)) {
-                    view.addAfterPropsSetMethodIfNotExists(it)
+                    view.addAfterPropsSetMethod(it)
                 }
             }
         }
@@ -485,10 +488,10 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
         }
     }
 
-    private fun addStyleAttributes() {
+    private suspend fun addStyleAttributes() {
         modelClassMap
             .values
-            .filter { it.viewElement.hasStyleableAnnotation(elementUtils) }
+            .filter("addStyleAttributes") { it.viewElement.hasStyleableAnnotation(elementUtils) }
             .also { styleableModelsToWrite.addAll(it) }
     }
 

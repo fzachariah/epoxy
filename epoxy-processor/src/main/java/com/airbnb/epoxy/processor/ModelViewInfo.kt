@@ -1,15 +1,12 @@
 package com.airbnb.epoxy.processor
 
 import com.airbnb.epoxy.ModelView
-import com.airbnb.epoxy.processor.Utils.isAssignable
-import com.airbnb.epoxy.processor.Utils.isEpoxyModel
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.ParameterizedTypeName
 import com.squareup.javapoet.TypeName
 import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.Modifier
-import javax.lang.model.element.Parameterizable
 import javax.lang.model.element.TypeElement
 import javax.lang.model.type.DeclaredType
 import javax.lang.model.type.TypeMirror
@@ -21,6 +18,7 @@ import kotlinx.metadata.KmFunction
 import kotlinx.metadata.KmType
 import kotlinx.metadata.jvm.KotlinClassHeader
 import kotlinx.metadata.jvm.KotlinClassMetadata
+import java.util.Collections
 
 class ModelViewInfo(
     val viewElement: TypeElement,
@@ -32,15 +30,24 @@ class ModelViewInfo(
     memoizer: Memoizer
 ) : GeneratedModelInfo(memoizer) {
 
-    val resetMethodNames = mutableListOf<String>()
-    val visibilityStateChangedMethodNames = mutableListOf<String>()
-    val visibilityChangedMethodNames = mutableListOf<String>()
-    val afterPropsSetMethodNames = mutableListOf<String>()
+    val resetMethodNames = Collections.synchronizedSet(mutableSetOf<String>())
+    val visibilityStateChangedMethodNames = Collections.synchronizedSet(mutableSetOf<String>())
+    val visibilityChangedMethodNames = Collections.synchronizedSet(mutableSetOf<String>())
+    val afterPropsSetMethodNames = Collections.synchronizedSet(mutableSetOf<String>())
     val saveViewState: Boolean
     private val viewAnnotation: ModelView = viewElement.getAnnotation(ModelView::class.java)
     val fullSpanSize: Boolean
     private val generatedModelSuffix: String
     val kotlinMetadata: KotlinClassMetadata? = viewElement.kotlinMetadata()
+    val functionsWithSingleDefaultParameter: List<KmFunction> =
+        (kotlinMetadata as? KotlinClassMetadata.Class)
+            ?.toKmClass()
+            ?.functions
+            ?.filter {
+                val param = it.valueParameters.singleOrNull()
+                param != null && DECLARES_DEFAULT_VALUE(param.flags)
+            }
+            ?: emptyList()
 
     /** All interfaces the view implements that have at least one prop set by the interface. */
     private val viewInterfaces: List<TypeElement>
@@ -80,7 +87,7 @@ class ModelViewInfo(
         viewInterfaces = viewElement
             .interfaces
             .filterIsInstance<DeclaredType>()
-            .map { it.asElement() }
+            .map { it.asElement().ensureLoaded() }
             .filterIsInstance<TypeElement>()
             .filter { interfaceElement ->
                 // Only include the interface if the view has one of the interface methods annotated with a prop annotation
@@ -88,8 +95,7 @@ class ModelViewInfo(
                     viewMethod.hasAnyAnnotation(ModelViewProcessor.modelPropAnnotations) &&
                         interfaceElement.executableElements().any { interfaceMethod ->
                             // To keep this simple we only compare name and ignore parameters, should be close enough
-                            viewMethod.simpleName.toString() ==
-                                interfaceMethod.simpleName.toString()
+                            viewMethod.simpleName.toString() == interfaceMethod.simpleName.toString()
                         }
                 }
             }
@@ -132,7 +138,8 @@ class ModelViewInfo(
             ?: configManager.getDefaultBaseModel(viewElement)
             ?: return memoizer.epoxyModelClassElementUntyped
 
-        val superElement = memoizer.validateViewModelBaseClass(classToExtend, logger, viewElement.simpleName)
+        val superElement =
+            memoizer.validateViewModelBaseClass(classToExtend, logger, viewElement.simpleName)
 
         return superElement ?: memoizer.epoxyModelClassElementUntyped
     }
@@ -151,8 +158,7 @@ class ModelViewInfo(
 
     fun addProp(prop: Element) {
 
-        val hasDefaultKotlinValue = prop is ExecutableElement &&
-            kotlinMetadata?.findMatchingSetter(prop)?.hasSingleDefaultParameter() == true
+        val hasDefaultKotlinValue = checkIsSetterWithSingleDefaultParam(prop)
 
         // Since our generated code is java we need jvmoverloads so that a no arg
         // version of the function is generated. However, the JvmOverloads annotation
@@ -197,32 +203,24 @@ class ModelViewInfo(
         )
     }
 
-    fun addOnRecycleMethodIfNotExists(resetMethod: Element) {
+    fun addOnRecycleMethod(resetMethod: Element) {
         val methodName = resetMethod.simpleName.toString()
-        if (!resetMethodNames.contains(methodName)) {
-            resetMethodNames.add(methodName)
-        }
+        resetMethodNames.add(methodName)
     }
 
-    fun addOnVisibilityStateChangedMethodIfNotExists(visibilityMethod: Element) {
+    fun addOnVisibilityStateChangedMethod(visibilityMethod: Element) {
         val methodName = visibilityMethod.simpleName.toString()
-        if (!visibilityStateChangedMethodNames.contains(methodName)) {
-            visibilityStateChangedMethodNames.add(methodName)
-        }
+        visibilityStateChangedMethodNames.add(methodName)
     }
 
-    fun addOnVisibilityChangedMethodIfNotExists(visibilityMethod: Element) {
+    fun addOnVisibilityChangedMethod(visibilityMethod: Element) {
         val methodName = visibilityMethod.simpleName.toString()
-        if (!visibilityChangedMethodNames.contains(methodName)) {
-            visibilityChangedMethodNames.add(methodName)
-        }
+        visibilityChangedMethodNames.add(methodName)
     }
 
-    fun addAfterPropsSetMethodIfNotExists(afterPropsSetMethod: Element) {
+    fun addAfterPropsSetMethod(afterPropsSetMethod: Element) {
         val methodName = afterPropsSetMethod.simpleName.toString()
-        if (!afterPropsSetMethodNames.contains(methodName)) {
-            afterPropsSetMethodNames.add(methodName)
-        }
+        afterPropsSetMethodNames.add(methodName)
     }
 
     fun getLayoutResource(resourceProcessor: ResourceProcessor): ResourceValue {
@@ -242,63 +240,37 @@ class ModelViewInfo(
         return ResourceValue(0)
     }
 
-    private fun KotlinClassMetadata.findMatchingSetter(functionElement: ExecutableElement): KmFunction? {
-        if (this !is KotlinClassMetadata.Class) return null
+    private fun checkIsSetterWithSingleDefaultParam(element: Element): Boolean {
+        if (element !is ExecutableElement) return false
 
         // Given an element representing a function we want to find the corresponding function information
         // in the kotlin metadata of this class. We do this by searching for a function matching the same
         // name, param count, param name, and param type.
         // This assumes the param count we're looking for is 1 since this is an epoxy setter.
-        val parameters = functionElement.parametersThreadSafe
-        require(parameters.size == 1) { "Expected function $functionElement to have exactly 1 parameter" }
-        val paramName = parameters.single().simpleName.toString()
-        val functionName = functionElement.simpleName.toString()
+        val parameters = element.parametersThreadSafe
+        require(parameters.size == 1) { "Expected function $element to have exactly 1 parameter" }
 
-        val propTypeClassName =
-            parameters.single().asType().toString().let { ClassNameData.from(it) }
+        val targetFunctionName = element.simpleName.toString()
+        val functionsWithSameName = functionsWithSingleDefaultParameter
+            .filter { it.name == targetFunctionName }
 
-        // Checking function name, param count, and param name are easy
-        val matchingFunctions = toKmClass().functions
-            .filter { it.name == functionName }
-            .filter {
-                val param = it.valueParameters.singleOrNull()
-                param?.name == paramName
-            }
+        if (functionsWithSameName.isEmpty()) return false
 
-        // However, checking param type is hard. If there are function overloads that have the same
-        // naming, but with different param types, then we need to be able to distinguish between
-        // them. This is difficult because the type information from the Kotlin metadata doesn't
-        // have a clear mapping to the Element type information.
-        if (matchingFunctions.size <= 1) {
-            return matchingFunctions.firstOrNull()
+        val param = parameters.single()
+        val paramName = param.simpleName.toString()
+        val paramType = ClassNameData.from(param.asType().toString())
+
+        return functionsWithSameName.any { kmFunction ->
+            val kmParam = kmFunction.valueParameters.singleOrNull() ?: return@any false
+
+            kmParam.name == paramName &&
+                ClassNameData.from(kmParam.type)?.isSameAs(paramType) == true
         }
-
-        return matchingFunctions.mapNotNull { function ->
-            val className = ClassNameData.from(function.valueParameters.single().type)
-
-            if (className == null) {
-                null
-            } else {
-                function to className
-            }
-        }.sortedWith(Comparator { p0, p1 ->
-            // Given two kotlin metadata functions and their class names, this comparator
-            // compares them to see which is more likely to be the same as the function Element
-            // we are trying to match with.
-            compareNames(propTypeClassName, p0.second, p1.second)
-        }).lastOrNull()?.first
     }
 
-    private fun KmFunction.hasSingleDefaultParameter(): Boolean {
-        val param = valueParameters.singleOrNull() ?: return false
-        return DECLARES_DEFAULT_VALUE(param.flags)
-    }
-
-    private fun compareNames(
-        targetType: ClassNameData,
-        leftType: ClassNameData,
-        rightType: ClassNameData
-    ): Int {
+    private fun ClassNameData.isSameAs(
+        otherType: ClassNameData
+    ): Boolean {
         // The package names of kotlin metadata types use kotlin versions of things (ie kotlin.String)
         // whereas the java Element types use the Java package names. This makes it hard to directly
         // compare types. Additionally, generic information is presented in slightly different formats
@@ -308,37 +280,18 @@ class ModelViewInfo(
         // Sanity check that generic type counts are correct.
         // Because of type erasure a function can't have the same signature with something of the same
         // class and different generic types, so we don't have to check generic types
-        if (leftType.typeNames.size == rightType.typeNames.size) {
-            if (leftType.typeNames.size != targetType.typeNames.size) {
-                // Neither of the types has the right generic information, so they are equally unfit
-                return 0
-            }
-        } else {
-            return when {
-                leftType.typeNames.size == targetType.typeNames.size -> 1
-                rightType.typeNames.size == targetType.typeNames.size -> -1
-                else -> 0
-            }
+        if (typeNames.size != otherType.typeNames.size) {
+            return false
         }
 
-        targetType.packageNames.forEachIndexed { index, name ->
-            val leftName = leftType.packageNames.getOrNull(index)
-            val rightName = rightType.packageNames.getOrNull(index)
-
-            when {
-                leftName == name && rightName != name -> return 1
-                leftName != name && rightName == name -> return -1
-            }
-        }
-
-        return 0
+        return simpleName.equals(otherType.simpleName, ignoreCase = true)
     }
 
     data class ClassNameData(
         val fullNameWithoutTypes: String,
         val typeNames: List<ClassNameData?>
     ) {
-        val packageNames: List<String> = fullNameWithoutTypes.split(".").reversed()
+        val simpleName: String = fullNameWithoutTypes.substringAfterLast(".")
 
         companion object {
             fun from(kmType: KmType?): ClassNameData? {
