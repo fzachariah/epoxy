@@ -112,21 +112,23 @@ internal object ProcessorTestUtils {
                 *generatedFiles.drop(1).toTypedArray()
             )
 
-//        assert_().about(javaSources())
-//            .that(sourceObjects + sourceFileNames.toJavaFileObjects())
-//            // Also compile using these flags, since they run different code and could help
-//            // catch concurrency issues.
-//            .withAnnotationProcessorOptions(
-//                "enableParallelEpoxyProcessing" to true,
-//                "logEpoxyTimings" to true
-//            )
-//            .processedWith(processors(useParis))
-//            .compilesWithoutError()
-//            .and()
-//            .generatesSources(
-//                generatedFiles[0],
-//                *generatedFiles.drop(1).toTypedArray()
-//            )
+        assert_().about(javaSources())
+            .that(sourceObjects + sourceFileNames.toJavaFileObjects())
+            // Also compile using these flags, since they run different code and could help
+            // catch concurrency issues, as well as indeterminate ways that the order of generated
+            // code may change due to concurrent processing. Generated code output must be stable
+            // to provide stable build cache keys
+            .withAnnotationProcessorOptions(
+                "enableParallelEpoxyProcessing" to true,
+                "logEpoxyTimings" to true
+            )
+            .processedWith(processors(useParis))
+            .compilesWithoutError()
+            .and()
+            .generatesSources(
+                generatedFiles[0],
+                *generatedFiles.drop(1).toTypedArray()
+            )
     }
 }
 

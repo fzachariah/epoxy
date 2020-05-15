@@ -71,11 +71,11 @@ public class PropDefaultsViewModel_ extends EpoxyModel<PropDefaultsView> impleme
   @Override
   public void bind(final PropDefaultsView object) {
     super.bind(object);
-    object.primitiveWithExplicitDefault(primitiveWithExplicitDefault_Int);
     object.defaultsToNull(defaultsToNull_CharSequence);
     object.noDefaultSoItIsRequired(noDefaultSoItIsRequired_CharSequence);
-    object.objectWithDefaultAndNullable(objectWithDefaultAndNullable_String);
     object.objectWithDefault(objectWithDefault_String);
+    object.objectWithDefaultAndNullable(objectWithDefaultAndNullable_String);
+    object.primitiveWithExplicitDefault(primitiveWithExplicitDefault_Int);
     object.primitivesHaveImplicitDefaultsAndCannotBeRequired(primitivesHaveImplicitDefaultsAndCannotBeRequired_Int);
   }
 
@@ -88,10 +88,6 @@ public class PropDefaultsViewModel_ extends EpoxyModel<PropDefaultsView> impleme
     PropDefaultsViewModel_ that = (PropDefaultsViewModel_) previousModel;
     super.bind(object);
 
-    if ((primitiveWithExplicitDefault_Int != that.primitiveWithExplicitDefault_Int)) {
-      object.primitiveWithExplicitDefault(primitiveWithExplicitDefault_Int);
-    }
-
     if ((defaultsToNull_CharSequence != null ? !defaultsToNull_CharSequence.equals(that.defaultsToNull_CharSequence) : that.defaultsToNull_CharSequence != null)) {
       object.defaultsToNull(defaultsToNull_CharSequence);
     }
@@ -100,12 +96,16 @@ public class PropDefaultsViewModel_ extends EpoxyModel<PropDefaultsView> impleme
       object.noDefaultSoItIsRequired(noDefaultSoItIsRequired_CharSequence);
     }
 
+    if ((objectWithDefault_String != null ? !objectWithDefault_String.equals(that.objectWithDefault_String) : that.objectWithDefault_String != null)) {
+      object.objectWithDefault(objectWithDefault_String);
+    }
+
     if ((objectWithDefaultAndNullable_String != null ? !objectWithDefaultAndNullable_String.equals(that.objectWithDefaultAndNullable_String) : that.objectWithDefaultAndNullable_String != null)) {
       object.objectWithDefaultAndNullable(objectWithDefaultAndNullable_String);
     }
 
-    if ((objectWithDefault_String != null ? !objectWithDefault_String.equals(that.objectWithDefault_String) : that.objectWithDefault_String != null)) {
-      object.objectWithDefault(objectWithDefault_String);
+    if ((primitiveWithExplicitDefault_Int != that.primitiveWithExplicitDefault_Int)) {
+      object.primitiveWithExplicitDefault(primitiveWithExplicitDefault_Int);
     }
 
     if ((primitivesHaveImplicitDefaultsAndCannotBeRequired_Int != that.primitivesHaveImplicitDefaultsAndCannotBeRequired_Int)) {

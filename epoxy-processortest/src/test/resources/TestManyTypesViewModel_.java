@@ -120,20 +120,20 @@ public class TestManyTypesViewModel_ extends EpoxyModel<TestManyTypesView> imple
     if (!assignedAttributes_epoxyGeneratedModel.get(0)) {
     	throw new IllegalStateException("A value is required for setArrayValue");
     }
-    if (!assignedAttributes_epoxyGeneratedModel.get(3)) {
-    	throw new IllegalStateException("A value is required for setClickListener");
-    }
     if (!assignedAttributes_epoxyGeneratedModel.get(2)) {
     	throw new IllegalStateException("A value is required for setBooleanValue");
     }
-    if (!assignedAttributes_epoxyGeneratedModel.get(12)) {
-    	throw new IllegalStateException("A value is required for setStringValue");
+    if (!assignedAttributes_epoxyGeneratedModel.get(3)) {
+    	throw new IllegalStateException("A value is required for setClickListener");
     }
     if (!assignedAttributes_epoxyGeneratedModel.get(9)) {
     	throw new IllegalStateException("A value is required for setIntegerValue");
     }
     if (!assignedAttributes_epoxyGeneratedModel.get(10)) {
     	throw new IllegalStateException("A value is required for setListValue");
+    }
+    if (!assignedAttributes_epoxyGeneratedModel.get(12)) {
+    	throw new IllegalStateException("A value is required for setStringValue");
     }
   }
 
@@ -147,19 +147,19 @@ public class TestManyTypesViewModel_ extends EpoxyModel<TestManyTypesView> imple
   public void bind(final TestManyTypesView object) {
     super.bind(object);
     object.setArrayValue(arrayValue_StringArray);
-    object.setClickListener(clickListener_OnClickListener);
+    object.setBoolValue(boolValue_Boolean);
     object.setBooleanValue(booleanValue_Boolean);
-    object.setTitle(title_StringAttributeData.toString(object.getContext()));
-    object.setStringValue(stringValue_String);
-    object.setNullableStringValue(nullableStringValue_String);
+    object.setClickListener(clickListener_OnClickListener);
+    object.setIntValue(intValue_Int);
     object.setIntValueWithAnnotation(intValueWithAnnotation_Int);
     object.setIntValueWithDimenTypeAnnotation(intValueWithDimenTypeAnnotation_Int);
+    object.setIntValueWithRangeAnnotation(intValueWithRangeAnnotation_Int);
     object.setIntWithMultipleAnnotations(intWithMultipleAnnotations_Int);
     object.setIntegerValue(integerValue_Integer);
     object.setListValue(listValue_List);
-    object.setIntValue(intValue_Int);
-    object.setIntValueWithRangeAnnotation(intValueWithRangeAnnotation_Int);
-    object.setBoolValue(boolValue_Boolean);
+    object.setNullableStringValue(nullableStringValue_String);
+    object.setStringValue(stringValue_String);
+    object.setTitle(title_StringAttributeData.toString(object.getContext()));
   }
 
   @Override
@@ -175,24 +175,20 @@ public class TestManyTypesViewModel_ extends EpoxyModel<TestManyTypesView> imple
       object.setArrayValue(arrayValue_StringArray);
     }
 
-    if (((clickListener_OnClickListener == null) != (that.clickListener_OnClickListener == null))) {
-      object.setClickListener(clickListener_OnClickListener);
+    if ((boolValue_Boolean != that.boolValue_Boolean)) {
+      object.setBoolValue(boolValue_Boolean);
     }
 
     if ((booleanValue_Boolean != null ? !booleanValue_Boolean.equals(that.booleanValue_Boolean) : that.booleanValue_Boolean != null)) {
       object.setBooleanValue(booleanValue_Boolean);
     }
 
-    if ((title_StringAttributeData != null ? !title_StringAttributeData.equals(that.title_StringAttributeData) : that.title_StringAttributeData != null)) {
-      object.setTitle(title_StringAttributeData.toString(object.getContext()));
+    if (((clickListener_OnClickListener == null) != (that.clickListener_OnClickListener == null))) {
+      object.setClickListener(clickListener_OnClickListener);
     }
 
-    if ((stringValue_String != null ? !stringValue_String.equals(that.stringValue_String) : that.stringValue_String != null)) {
-      object.setStringValue(stringValue_String);
-    }
-
-    if ((nullableStringValue_String != null ? !nullableStringValue_String.equals(that.nullableStringValue_String) : that.nullableStringValue_String != null)) {
-      object.setNullableStringValue(nullableStringValue_String);
+    if ((intValue_Int != that.intValue_Int)) {
+      object.setIntValue(intValue_Int);
     }
 
     if ((intValueWithAnnotation_Int != that.intValueWithAnnotation_Int)) {
@@ -201,6 +197,10 @@ public class TestManyTypesViewModel_ extends EpoxyModel<TestManyTypesView> imple
 
     if ((intValueWithDimenTypeAnnotation_Int != that.intValueWithDimenTypeAnnotation_Int)) {
       object.setIntValueWithDimenTypeAnnotation(intValueWithDimenTypeAnnotation_Int);
+    }
+
+    if ((intValueWithRangeAnnotation_Int != that.intValueWithRangeAnnotation_Int)) {
+      object.setIntValueWithRangeAnnotation(intValueWithRangeAnnotation_Int);
     }
 
     if ((intWithMultipleAnnotations_Int != that.intWithMultipleAnnotations_Int)) {
@@ -215,16 +215,16 @@ public class TestManyTypesViewModel_ extends EpoxyModel<TestManyTypesView> imple
       object.setListValue(listValue_List);
     }
 
-    if ((intValue_Int != that.intValue_Int)) {
-      object.setIntValue(intValue_Int);
+    if ((nullableStringValue_String != null ? !nullableStringValue_String.equals(that.nullableStringValue_String) : that.nullableStringValue_String != null)) {
+      object.setNullableStringValue(nullableStringValue_String);
     }
 
-    if ((intValueWithRangeAnnotation_Int != that.intValueWithRangeAnnotation_Int)) {
-      object.setIntValueWithRangeAnnotation(intValueWithRangeAnnotation_Int);
+    if ((stringValue_String != null ? !stringValue_String.equals(that.stringValue_String) : that.stringValue_String != null)) {
+      object.setStringValue(stringValue_String);
     }
 
-    if ((boolValue_Boolean != that.boolValue_Boolean)) {
-      object.setBoolValue(boolValue_Boolean);
+    if ((title_StringAttributeData != null ? !title_StringAttributeData.equals(that.title_StringAttributeData) : that.title_StringAttributeData != null)) {
+      object.setTitle(title_StringAttributeData.toString(object.getContext()));
     }
   }
 

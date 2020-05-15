@@ -361,7 +361,11 @@ internal class ModelViewWriter(
         modelViewInfo: ModelViewInfo,
         unbindParamName: String
     ) {
-        for (methodName in modelViewInfo.resetMethodNames) {
+        // these methods, and all other callback methods below, are sorted since they are added to
+        // in concurrent work which can otherwise make the ordering indeterminate. We need generated
+        // code to be stable across runs both for tests to pass and so that build cache keys
+        // are stable.
+        for (methodName in modelViewInfo.resetMethodNames.sorted()) {
             builder.addStatement("$unbindParamName.$methodName()")
         }
     }
@@ -371,7 +375,7 @@ internal class ModelViewWriter(
         modelViewInfo: ModelViewInfo,
         visibilityParamName: String
     ) {
-        for (methodName in modelViewInfo.visibilityStateChangedMethodNames) {
+        for (methodName in modelViewInfo.visibilityStateChangedMethodNames.sorted()) {
             builder.addStatement("$visibilityParamName.$methodName(visibilityState)")
         }
     }
@@ -381,7 +385,7 @@ internal class ModelViewWriter(
         modelViewInfo: ModelViewInfo,
         visibilityParamName: String
     ) {
-        for (methodName in modelViewInfo.visibilityChangedMethodNames) {
+        for (methodName in modelViewInfo.visibilityChangedMethodNames.sorted()) {
             builder.addStatement(
                 "$visibilityParamName.$methodName" +
                     "(percentVisibleHeight, percentVisibleWidth, visibleHeight, visibleWidth)"
@@ -394,7 +398,7 @@ internal class ModelViewWriter(
         modelInfo: ModelViewInfo,
         boundObjectParam: ParameterSpec
     ) {
-        for (methodName in modelInfo.afterPropsSetMethodNames) {
+        for (methodName in modelInfo.afterPropsSetMethodNames.sorted()) {
             methodBuilder.addStatement(boundObjectParam.name + "." + methodName + "()")
         }
     }

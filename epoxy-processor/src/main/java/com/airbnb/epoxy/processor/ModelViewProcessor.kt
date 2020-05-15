@@ -222,9 +222,12 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
                 }
             }
 
-            for ((key, value) in attributeGroups) {
+            // Groups, and attributes within groups, are sorted to make ordering determinate. We need generated
+            // code to be stable across runs both for tests to pass and so that build cache keys
+            // are stable.
+            for ((key, value) in attributeGroups.toSortedMap()) {
                 try {
-                    viewInfo.addAttributeGroup(key, value)
+                    viewInfo.addAttributeGroup(key, value.sorted())
                 } catch (e: EpoxyProcessorException) {
                     logger.logError(e)
                 }

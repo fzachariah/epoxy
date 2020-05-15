@@ -45,14 +45,14 @@ public class DoNotHashViewModel_ extends EpoxyModel<DoNotHashView> implements Ge
   public void addTo(EpoxyController controller) {
     super.addTo(controller);
     addWithDebugValidation(controller);
+    if (!assignedAttributes_epoxyGeneratedModel.get(1)) {
+    	throw new IllegalStateException("A value is required for normalProp");
+    }
     if (!assignedAttributes_epoxyGeneratedModel.get(0)) {
     	throw new IllegalStateException("A value is required for setClickListener");
     }
     if (!assignedAttributes_epoxyGeneratedModel.get(2)) {
     	throw new IllegalStateException("A value is required for setTitle");
-    }
-    if (!assignedAttributes_epoxyGeneratedModel.get(1)) {
-    	throw new IllegalStateException("A value is required for normalProp");
     }
   }
 
@@ -65,9 +65,9 @@ public class DoNotHashViewModel_ extends EpoxyModel<DoNotHashView> implements Ge
   @Override
   public void bind(final DoNotHashView object) {
     super.bind(object);
+    object.normalProp(normalProp_CharSequence);
     object.setClickListener(clickListener_OnClickListener);
     object.setTitle(title_CharSequence);
-    object.normalProp(normalProp_CharSequence);
   }
 
   @Override
@@ -79,16 +79,16 @@ public class DoNotHashViewModel_ extends EpoxyModel<DoNotHashView> implements Ge
     DoNotHashViewModel_ that = (DoNotHashViewModel_) previousModel;
     super.bind(object);
 
+    if ((normalProp_CharSequence != null ? !normalProp_CharSequence.equals(that.normalProp_CharSequence) : that.normalProp_CharSequence != null)) {
+      object.normalProp(normalProp_CharSequence);
+    }
+
     if (((clickListener_OnClickListener == null) != (that.clickListener_OnClickListener == null))) {
       object.setClickListener(clickListener_OnClickListener);
     }
 
     if (((title_CharSequence == null) != (that.title_CharSequence == null))) {
       object.setTitle(title_CharSequence);
-    }
-
-    if ((normalProp_CharSequence != null ? !normalProp_CharSequence.equals(that.normalProp_CharSequence) : that.normalProp_CharSequence != null)) {
-      object.normalProp(normalProp_CharSequence);
     }
   }
 

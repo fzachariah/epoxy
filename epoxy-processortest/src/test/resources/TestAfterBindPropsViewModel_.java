@@ -45,8 +45,8 @@ public class TestAfterBindPropsViewModel_ extends EpoxyModel<TestAfterBindPropsV
   @Override
   public void bind(final TestAfterBindPropsView object) {
     super.bind(object);
-    object.setFlagSuper(flagSuper_Boolean);
     object.setFlag(flag_Boolean);
+    object.setFlagSuper(flagSuper_Boolean);
   }
 
   @Override
@@ -58,12 +58,12 @@ public class TestAfterBindPropsViewModel_ extends EpoxyModel<TestAfterBindPropsV
     TestAfterBindPropsViewModel_ that = (TestAfterBindPropsViewModel_) previousModel;
     super.bind(object);
 
-    if ((flagSuper_Boolean != that.flagSuper_Boolean)) {
-      object.setFlagSuper(flagSuper_Boolean);
-    }
-
     if ((flag_Boolean != that.flag_Boolean)) {
       object.setFlag(flag_Boolean);
+    }
+
+    if ((flagSuper_Boolean != that.flagSuper_Boolean)) {
+      object.setFlagSuper(flagSuper_Boolean);
     }
   }
 

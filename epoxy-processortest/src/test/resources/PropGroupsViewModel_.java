@@ -91,7 +91,7 @@ public class PropGroupsViewModel_ extends EpoxyModel<PropGroupsView> implements 
   public void addTo(EpoxyController controller) {
     super.addTo(controller);
     addWithDebugValidation(controller);
-    if (!assignedAttributes_epoxyGeneratedModel.get(9) && !assignedAttributes_epoxyGeneratedModel.get(8)) {
+    if (!assignedAttributes_epoxyGeneratedModel.get(8) && !assignedAttributes_epoxyGeneratedModel.get(9)) {
     	throw new IllegalStateException("A value is required for requiredGroup");
     }
   }
@@ -105,6 +105,30 @@ public class PropGroupsViewModel_ extends EpoxyModel<PropGroupsView> implements 
   @Override
   public void bind(final PropGroupsView object) {
     super.bind(object);
+    if (assignedAttributes_epoxyGeneratedModel.get(0)) {
+      object.setAnotherThing(anotherThing_CharSequence);
+    }
+    else if (assignedAttributes_epoxyGeneratedModel.get(1)) {
+      object.setOneThing(oneThing_Long);
+    }
+    else {
+      object.setOneThing(oneThing_Long);
+    }
+    if (assignedAttributes_epoxyGeneratedModel.get(2)) {
+      object.primitiveAndObjectGroupWithPrimitiveDefault(primitiveAndObjectGroupWithPrimitiveDefault_CharSequence);
+    }
+    else if (assignedAttributes_epoxyGeneratedModel.get(3)) {
+      object.primitiveAndObjectGroupWithPrimitiveDefault(primitiveAndObjectGroupWithPrimitiveDefault_Long);
+    }
+    else {
+      object.primitiveAndObjectGroupWithPrimitiveDefault(primitiveAndObjectGroupWithPrimitiveDefault_Long);
+    }
+    if (assignedAttributes_epoxyGeneratedModel.get(8)) {
+      object.requiredGroup(requiredGroup_CharSequence);
+    }
+    else {
+      object.requiredGroup(requiredGroup_String);
+    }
     if (assignedAttributes_epoxyGeneratedModel.get(6)) {
       object.setPrimitive(primitive_Int);
     }
@@ -114,29 +138,14 @@ public class PropGroupsViewModel_ extends EpoxyModel<PropGroupsView> implements 
     else {
       object.setPrimitive(primitive_Int);
     }
-    if (assignedAttributes_epoxyGeneratedModel.get(9)) {
-      object.requiredGroup(requiredGroup_String);
+    if (assignedAttributes_epoxyGeneratedModel.get(4)) {
+      object.setPrimitiveWithDefault(primitiveWithDefault_Int);
+    }
+    else if (assignedAttributes_epoxyGeneratedModel.get(5)) {
+      object.setPrimitiveWithDefault(primitiveWithDefault_Long);
     }
     else {
-      object.requiredGroup(requiredGroup_CharSequence);
-    }
-    if (assignedAttributes_epoxyGeneratedModel.get(3)) {
-      object.primitiveAndObjectGroupWithPrimitiveDefault(primitiveAndObjectGroupWithPrimitiveDefault_Long);
-    }
-    else if (assignedAttributes_epoxyGeneratedModel.get(2)) {
-      object.primitiveAndObjectGroupWithPrimitiveDefault(primitiveAndObjectGroupWithPrimitiveDefault_CharSequence);
-    }
-    else {
-      object.primitiveAndObjectGroupWithPrimitiveDefault(primitiveAndObjectGroupWithPrimitiveDefault_Long);
-    }
-    if (assignedAttributes_epoxyGeneratedModel.get(1)) {
-      object.setOneThing(oneThing_Long);
-    }
-    else if (assignedAttributes_epoxyGeneratedModel.get(0)) {
-      object.setAnotherThing(anotherThing_CharSequence);
-    }
-    else {
-      object.setOneThing(oneThing_Long);
+      object.setPrimitiveWithDefault(primitiveWithDefault_Long);
     }
     if (assignedAttributes_epoxyGeneratedModel.get(12)) {
       object.setSomething(something_CharSequence);
@@ -156,15 +165,6 @@ public class PropGroupsViewModel_ extends EpoxyModel<PropGroupsView> implements 
     else {
       object.setSomethingElse(somethingElse_Int);
     }
-    if (assignedAttributes_epoxyGeneratedModel.get(4)) {
-      object.setPrimitiveWithDefault(primitiveWithDefault_Int);
-    }
-    else if (assignedAttributes_epoxyGeneratedModel.get(5)) {
-      object.setPrimitiveWithDefault(primitiveWithDefault_Long);
-    }
-    else {
-      object.setPrimitiveWithDefault(primitiveWithDefault_Long);
-    }
   }
 
   @Override
@@ -175,6 +175,47 @@ public class PropGroupsViewModel_ extends EpoxyModel<PropGroupsView> implements 
     }
     PropGroupsViewModel_ that = (PropGroupsViewModel_) previousModel;
     super.bind(object);
+
+    if (assignedAttributes_epoxyGeneratedModel.get(0)) {
+      if (!that.assignedAttributes_epoxyGeneratedModel.get(0) || (anotherThing_CharSequence != null ? !anotherThing_CharSequence.equals(that.anotherThing_CharSequence) : that.anotherThing_CharSequence != null)) {
+        object.setAnotherThing(anotherThing_CharSequence);
+      }
+    }
+    else if (assignedAttributes_epoxyGeneratedModel.get(1)) {
+      if ((oneThing_Long != that.oneThing_Long)) {
+        object.setOneThing(oneThing_Long);
+      }
+    }
+    // A value was not set so we should use the default value, but we only need to set it if the previous model had a custom value set.
+    else if (that.assignedAttributes_epoxyGeneratedModel.get(0) || that.assignedAttributes_epoxyGeneratedModel.get(1)) {
+      object.setOneThing(oneThing_Long);
+    }
+
+    if (assignedAttributes_epoxyGeneratedModel.get(2)) {
+      if (!that.assignedAttributes_epoxyGeneratedModel.get(2) || (primitiveAndObjectGroupWithPrimitiveDefault_CharSequence != null ? !primitiveAndObjectGroupWithPrimitiveDefault_CharSequence.equals(that.primitiveAndObjectGroupWithPrimitiveDefault_CharSequence) : that.primitiveAndObjectGroupWithPrimitiveDefault_CharSequence != null)) {
+        object.primitiveAndObjectGroupWithPrimitiveDefault(primitiveAndObjectGroupWithPrimitiveDefault_CharSequence);
+      }
+    }
+    else if (assignedAttributes_epoxyGeneratedModel.get(3)) {
+      if ((primitiveAndObjectGroupWithPrimitiveDefault_Long != that.primitiveAndObjectGroupWithPrimitiveDefault_Long)) {
+        object.primitiveAndObjectGroupWithPrimitiveDefault(primitiveAndObjectGroupWithPrimitiveDefault_Long);
+      }
+    }
+    // A value was not set so we should use the default value, but we only need to set it if the previous model had a custom value set.
+    else if (that.assignedAttributes_epoxyGeneratedModel.get(2) || that.assignedAttributes_epoxyGeneratedModel.get(3)) {
+      object.primitiveAndObjectGroupWithPrimitiveDefault(primitiveAndObjectGroupWithPrimitiveDefault_Long);
+    }
+
+    if (assignedAttributes_epoxyGeneratedModel.get(8)) {
+      if (!that.assignedAttributes_epoxyGeneratedModel.get(8) || (requiredGroup_CharSequence != null ? !requiredGroup_CharSequence.equals(that.requiredGroup_CharSequence) : that.requiredGroup_CharSequence != null)) {
+        object.requiredGroup(requiredGroup_CharSequence);
+      }
+    }
+    else if (assignedAttributes_epoxyGeneratedModel.get(9)) {
+      if (!that.assignedAttributes_epoxyGeneratedModel.get(9) || (requiredGroup_String != null ? !requiredGroup_String.equals(that.requiredGroup_String) : that.requiredGroup_String != null)) {
+        object.requiredGroup(requiredGroup_String);
+      }
+    }
 
     if (assignedAttributes_epoxyGeneratedModel.get(6)) {
       if ((primitive_Int != that.primitive_Int)) {
@@ -191,45 +232,19 @@ public class PropGroupsViewModel_ extends EpoxyModel<PropGroupsView> implements 
       object.setPrimitive(primitive_Int);
     }
 
-    if (assignedAttributes_epoxyGeneratedModel.get(9)) {
-      if (!that.assignedAttributes_epoxyGeneratedModel.get(9) || (requiredGroup_String != null ? !requiredGroup_String.equals(that.requiredGroup_String) : that.requiredGroup_String != null)) {
-        object.requiredGroup(requiredGroup_String);
+    if (assignedAttributes_epoxyGeneratedModel.get(4)) {
+      if ((primitiveWithDefault_Int != that.primitiveWithDefault_Int)) {
+        object.setPrimitiveWithDefault(primitiveWithDefault_Int);
       }
     }
-    else if (assignedAttributes_epoxyGeneratedModel.get(8)) {
-      if (!that.assignedAttributes_epoxyGeneratedModel.get(8) || (requiredGroup_CharSequence != null ? !requiredGroup_CharSequence.equals(that.requiredGroup_CharSequence) : that.requiredGroup_CharSequence != null)) {
-        object.requiredGroup(requiredGroup_CharSequence);
-      }
-    }
-
-    if (assignedAttributes_epoxyGeneratedModel.get(3)) {
-      if ((primitiveAndObjectGroupWithPrimitiveDefault_Long != that.primitiveAndObjectGroupWithPrimitiveDefault_Long)) {
-        object.primitiveAndObjectGroupWithPrimitiveDefault(primitiveAndObjectGroupWithPrimitiveDefault_Long);
-      }
-    }
-    else if (assignedAttributes_epoxyGeneratedModel.get(2)) {
-      if (!that.assignedAttributes_epoxyGeneratedModel.get(2) || (primitiveAndObjectGroupWithPrimitiveDefault_CharSequence != null ? !primitiveAndObjectGroupWithPrimitiveDefault_CharSequence.equals(that.primitiveAndObjectGroupWithPrimitiveDefault_CharSequence) : that.primitiveAndObjectGroupWithPrimitiveDefault_CharSequence != null)) {
-        object.primitiveAndObjectGroupWithPrimitiveDefault(primitiveAndObjectGroupWithPrimitiveDefault_CharSequence);
+    else if (assignedAttributes_epoxyGeneratedModel.get(5)) {
+      if ((primitiveWithDefault_Long != that.primitiveWithDefault_Long)) {
+        object.setPrimitiveWithDefault(primitiveWithDefault_Long);
       }
     }
     // A value was not set so we should use the default value, but we only need to set it if the previous model had a custom value set.
-    else if (that.assignedAttributes_epoxyGeneratedModel.get(3) || that.assignedAttributes_epoxyGeneratedModel.get(2)) {
-      object.primitiveAndObjectGroupWithPrimitiveDefault(primitiveAndObjectGroupWithPrimitiveDefault_Long);
-    }
-
-    if (assignedAttributes_epoxyGeneratedModel.get(1)) {
-      if ((oneThing_Long != that.oneThing_Long)) {
-        object.setOneThing(oneThing_Long);
-      }
-    }
-    else if (assignedAttributes_epoxyGeneratedModel.get(0)) {
-      if (!that.assignedAttributes_epoxyGeneratedModel.get(0) || (anotherThing_CharSequence != null ? !anotherThing_CharSequence.equals(that.anotherThing_CharSequence) : that.anotherThing_CharSequence != null)) {
-        object.setAnotherThing(anotherThing_CharSequence);
-      }
-    }
-    // A value was not set so we should use the default value, but we only need to set it if the previous model had a custom value set.
-    else if (that.assignedAttributes_epoxyGeneratedModel.get(1) || that.assignedAttributes_epoxyGeneratedModel.get(0)) {
-      object.setOneThing(oneThing_Long);
+    else if (that.assignedAttributes_epoxyGeneratedModel.get(4) || that.assignedAttributes_epoxyGeneratedModel.get(5)) {
+      object.setPrimitiveWithDefault(primitiveWithDefault_Long);
     }
 
     if (assignedAttributes_epoxyGeneratedModel.get(12)) {
@@ -260,21 +275,6 @@ public class PropGroupsViewModel_ extends EpoxyModel<PropGroupsView> implements 
     // A value was not set so we should use the default value, but we only need to set it if the previous model had a custom value set.
     else if (that.assignedAttributes_epoxyGeneratedModel.get(10) || that.assignedAttributes_epoxyGeneratedModel.get(11)) {
       object.setSomethingElse(somethingElse_Int);
-    }
-
-    if (assignedAttributes_epoxyGeneratedModel.get(4)) {
-      if ((primitiveWithDefault_Int != that.primitiveWithDefault_Int)) {
-        object.setPrimitiveWithDefault(primitiveWithDefault_Int);
-      }
-    }
-    else if (assignedAttributes_epoxyGeneratedModel.get(5)) {
-      if ((primitiveWithDefault_Long != that.primitiveWithDefault_Long)) {
-        object.setPrimitiveWithDefault(primitiveWithDefault_Long);
-      }
-    }
-    // A value was not set so we should use the default value, but we only need to set it if the previous model had a custom value set.
-    else if (that.assignedAttributes_epoxyGeneratedModel.get(4) || that.assignedAttributes_epoxyGeneratedModel.get(5)) {
-      object.setPrimitiveWithDefault(primitiveWithDefault_Long);
     }
   }
 
