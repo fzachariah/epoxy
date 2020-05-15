@@ -1292,7 +1292,7 @@ class GeneratedModelWriter(
 
         // This model did not specify a layout in its EpoxyModelClass annotation,
         // but its superclass might
-        val superClass = classElement.superClassElement(types)
+        classElement.superClassElement(types)
             ?.let { superClass ->
                 findSuperClassWithClassAnnotation(superClass)
             }
@@ -1300,8 +1300,7 @@ class GeneratedModelWriter(
                 return it
             }
 
-        logger
-            .logError(
+        logger.logError(
                 "Model must specify a valid layout resource in the %s annotation. " +
                     "(class: %s)",
                 EpoxyModelClass::class.java.simpleName,

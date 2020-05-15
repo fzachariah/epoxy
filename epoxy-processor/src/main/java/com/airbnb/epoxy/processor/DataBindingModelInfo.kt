@@ -2,7 +2,6 @@ package com.airbnb.epoxy.processor
 
 import com.airbnb.epoxy.processor.ClassNames.EPOXY_DATA_BINDING_HOLDER
 import com.airbnb.epoxy.processor.ClassNames.EPOXY_DATA_BINDING_MODEL
-import com.airbnb.epoxy.processor.Utils.getElementByName
 import com.airbnb.epoxy.processor.Utils.getElementByNameNullable
 import com.squareup.javapoet.ClassName
 import javax.lang.model.element.Element
@@ -18,8 +17,8 @@ internal class DataBindingModelInfo(
     private val layoutPrefix: String = "",
     val enableDoNotHash: Boolean,
     val annotatedElement: Element,
-    val memoizer: Memoizer
-) : GeneratedModelInfo() {
+    memoizer: Memoizer
+) : GeneratedModelInfo(memoizer) {
     private val dataBindingClassName: ClassName
 
     private var dataBindingClassElement: TypeElement? = null
@@ -40,7 +39,7 @@ internal class DataBindingModelInfo(
         boundObjectTypeName = EPOXY_DATA_BINDING_HOLDER
         shouldGenerateModel = true
 
-        collectMethodsReturningClassType(superClassElement, typeUtils)
+        collectMethodsReturningClassType(superClassElement)
     }
 
     /**

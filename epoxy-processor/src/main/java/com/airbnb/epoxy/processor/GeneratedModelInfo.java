@@ -1,6 +1,5 @@
 package com.airbnb.epoxy.processor;
 
-import com.airbnb.epoxy.EpoxyAttribute;
 import com.airbnb.epoxy.ModelView.Size;
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
@@ -26,10 +25,6 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.ExecutableType;
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Types;
 
 import androidx.annotation.Nullable;
 
@@ -37,7 +32,7 @@ import static com.airbnb.epoxy.processor.Utils.buildEpoxyException;
 import static com.airbnb.epoxy.processor.Utils.isSubtypeOfType;
 
 public abstract class GeneratedModelInfo {
-  private static final String RESET_METHOD = "reset";
+  public static final String RESET_METHOD = "reset";
   public static final String GENERATED_CLASS_NAME_SUFFIX = "_";
   public static final String GENERATED_MODEL_SUFFIX = "Model" + GENERATED_CLASS_NAME_SUFFIX;
 
@@ -47,6 +42,7 @@ public abstract class GeneratedModelInfo {
   protected ClassName generatedClassName;
   protected TypeName boundObjectTypeName;
   protected boolean shouldGenerateModel;
+  protected final Memoizer memoizer;
   /**
    * If true, any layout classes that exist that are prefixed by the default layout are included in
    * the generated model as other layout options via a generated method for each alternate layout.
@@ -73,6 +69,10 @@ public abstract class GeneratedModelInfo {
    */
   Size layoutParams = Size.NONE;
 
+  public GeneratedModelInfo(Memoizer memoizer) {
+    this.memoizer = memoizer;
+  }
+
   /**
    * The elements that influence the generation of this model.
    * eg base model class for @EpoxyModelClass, view class for @ModelView, etc
@@ -89,60 +89,17 @@ public abstract class GeneratedModelInfo {
    * Get information about constructors of the original class so we can duplicate them in the
    * generated class and call through to super with the proper parameters
    */
-  protected static List<ConstructorInfo> getClassConstructors(TypeElement classElement) {
-    List<ConstructorInfo> constructors = new ArrayList<>(2);
-
-    for (Element subElement : SynchronizationKt.getEnclosedElementsThreadSafe(classElement)) {
-      if (subElement.getKind() == ElementKind.CONSTRUCTOR
-          && !subElement.getModifiers().contains(Modifier.PRIVATE)) {
-
-        ExecutableElement constructor = ((ExecutableElement) subElement);
-        List<? extends VariableElement> params =
-            SynchronizationKt.getParametersThreadSafe(constructor);
-        constructors.add(new ConstructorInfo(subElement.getModifiers(), buildParamSpecs(params),
-            constructor.isVarArgs()));
-      }
-    }
-
-    return constructors;
+  protected List<ConstructorInfo> getClassConstructors(TypeElement classElement) {
+    return memoizer.getClassConstructors(classElement);
   }
 
   /**
    * Get information about methods returning class type of the original class so we can duplicate
    * them in the generated class for chaining purposes
    */
-  protected void collectMethodsReturningClassType(TypeElement modelClass, Types typeUtils) {
-    TypeElement clazz = modelClass;
-    while (true) {
-      TypeMirror superclass = clazz.getSuperclass();
-      SynchronizationKt.ensureLoaded(superclass);
-      if (superclass.getKind() == TypeKind.NONE) break;
-
-      for (Element subElement : SynchronizationKt.getEnclosedElementsThreadSafe(clazz)) {
-        Set<Modifier> modifiers = subElement.getModifiers();
-        if (subElement.getKind() == ElementKind.METHOD
-            && !modifiers.contains(Modifier.PRIVATE)
-            && !modifiers.contains(Modifier.FINAL)
-            && !modifiers.contains(Modifier.STATIC)) {
-          TypeMirror methodReturnType = ((ExecutableType) subElement.asType()).getReturnType();
-          if (methodReturnType.equals(clazz.asType())
-              || Utils.isSubtype(clazz.asType(), methodReturnType, typeUtils)) {
-            ExecutableElement castedSubElement = ((ExecutableElement) subElement);
-            List<? extends VariableElement> params =
-                SynchronizationKt.getParametersThreadSafe(castedSubElement);
-            String methodName = subElement.getSimpleName().toString();
-            if (methodName.equals(RESET_METHOD) && params.isEmpty()) {
-              continue;
-            }
-            boolean isEpoxyAttribute = castedSubElement.getAnnotation(EpoxyAttribute.class) != null;
-            methodsReturningClassType.add(new MethodInfo(methodName, modifiers,
-                buildParamSpecs(params), castedSubElement.isVarArgs(), isEpoxyAttribute,
-                castedSubElement));
-          }
-        }
-      }
-      clazz = (TypeElement) typeUtils.asElement(superclass);
-    }
+  protected void collectMethodsReturningClassType(TypeElement superModelClass) {
+    methodsReturningClassType
+        .addAll(memoizer.getMethodsReturningClassType(superModelClass.asType()));
   }
 
   protected static List<ParameterSpec> buildParamSpecs(List<? extends VariableElement> params) {
@@ -273,7 +230,7 @@ public abstract class GeneratedModelInfo {
     return isSubtypeOfType(superClassElement.asType(), "com.airbnb.epoxy.GeneratedModel<?>");
   }
 
-  static class ConstructorInfo {
+  public static class ConstructorInfo {
     final Set<Modifier> modifiers;
     final List<ParameterSpec> params;
     final boolean varargs;

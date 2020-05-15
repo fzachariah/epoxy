@@ -84,7 +84,8 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
                     elementUtils,
                     logger,
                     configManager,
-                    resourceProcessor
+                    resourceProcessor,
+                    memoizer
                 )
             }
     }

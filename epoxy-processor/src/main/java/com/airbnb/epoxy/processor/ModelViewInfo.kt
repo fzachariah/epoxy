@@ -12,7 +12,6 @@ import javax.lang.model.element.Modifier
 import javax.lang.model.element.Parameterizable
 import javax.lang.model.element.TypeElement
 import javax.lang.model.type.DeclaredType
-import javax.lang.model.type.MirroredTypeException
 import javax.lang.model.type.TypeMirror
 import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
@@ -29,8 +28,10 @@ class ModelViewInfo(
     val elements: Elements,
     val logger: Logger,
     private val configManager: ConfigManager,
-    private val resourceProcessor: ResourceProcessor
-) : GeneratedModelInfo() {
+    private val resourceProcessor: ResourceProcessor,
+    memoizer: Memoizer
+) : GeneratedModelInfo(memoizer) {
+
     val resetMethodNames = mutableListOf<String>()
     val visibilityStateChangedMethodNames = mutableListOf<String>()
     val visibilityChangedMethodNames = mutableListOf<String>()
@@ -65,7 +66,7 @@ class ModelViewInfo(
             constructors.addAll(getClassConstructors(superClassElement))
         }
 
-        collectMethodsReturningClassType(superClassElement, typeUtils)
+        collectMethodsReturningClassType(superClassElement)
 
         // The bound type is the type of this view
         boundObjectTypeName = ClassName.get(viewElement.asType())
@@ -126,62 +127,14 @@ class ModelViewInfo(
     }
 
     private fun lookUpSuperClassElement(): TypeElement {
-        val defaultSuper by lazy {
-            Utils.getElementByName(
-                ClassNames.EPOXY_MODEL_UNTYPED,
-                elements, typeUtils
-            )
-        }
-
         val classToExtend: TypeMirror = typeMirror { viewAnnotation.baseModelClass }
             ?.takeIf { !it.isVoidClass() }
             ?: configManager.getDefaultBaseModel(viewElement)
-            ?: return defaultSuper
+            ?: return memoizer.epoxyModelClassElementUntyped
 
-        if (!isEpoxyModel(classToExtend)) {
-            logger
-                .logError(
-                    "The base model provided to an %s must extend EpoxyModel, but was %s (%s).",
-                    ModelView::class.java.simpleName, classToExtend, viewElement.simpleName
-                )
-            return defaultSuper
-        }
+        val superElement = memoizer.validateViewModelBaseClass(classToExtend, logger, viewElement.simpleName)
 
-        if (!validateSuperClassIsTypedCorrectly(classToExtend)) {
-            logger.logError(
-                "The base model provided to an %s must have View as its type (%s).",
-                ModelView::class.java.simpleName, viewElement.simpleName
-            )
-            return defaultSuper
-        }
-
-        return typeUtils.asElement(classToExtend) as TypeElement
-    }
-
-    /** The super class that our generated model extends from must have View as its only type.  */
-    private fun validateSuperClassIsTypedCorrectly(classType: TypeMirror): Boolean {
-        val classElement = typeUtils.asElement(classType) as? Parameterizable ?: return false
-
-        val typeParameters = classElement.typeParameters
-        if (typeParameters.size != 1) {
-            // TODO: (eli_hart 6/15/17) It should be valid to have multiple or no types as long as they
-            // are correct, but that should be a rare case
-            return false
-        }
-
-        val typeParam = typeParameters[0]
-        val bounds = typeParam.bounds
-        if (bounds.isEmpty()) {
-            // Any type is allowed, so View wil work
-            return true
-        }
-
-        val typeMirror = bounds[0]
-        val viewType = getTypeMirror(ClassNames.ANDROID_VIEW, elements, typeUtils)
-        return isAssignable(viewType, typeMirror, typeUtils) || typeUtils.isSubtype(
-            typeMirror,
-            viewType
-        )
+        return superElement ?: memoizer.epoxyModelClassElementUntyped
     }
 
     private fun buildGeneratedModelName(

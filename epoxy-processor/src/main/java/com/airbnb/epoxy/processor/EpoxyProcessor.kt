@@ -153,7 +153,8 @@ class EpoxyProcessor : BaseProcessorWithPackageConfigs() {
             elementUtils,
             typeUtils,
             classElement,
-            logger
+            logger,
+            memoizer
         )
         modelClassMap[classElement] = generatedModelInfo
 

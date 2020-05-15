@@ -1,7 +1,6 @@
 package com.airbnb.epoxy.processor
 
 import com.airbnb.epoxy.EpoxyModelClass
-import com.airbnb.epoxy.processor.GeneratedModelInfo.*
 import com.airbnb.epoxy.processor.Utils.getElementByName
 import com.airbnb.epoxy.processor.Utils.getEpoxyObjectType
 import com.squareup.javapoet.ClassName
@@ -17,8 +16,9 @@ internal class BasicGeneratedModelInfo(
     private val elements: Elements,
     types: Types,
     superClassElement: TypeElement,
-    logger: Logger
-) : GeneratedModelInfo() {
+    logger: Logger,
+    memoizer: Memoizer
+) : GeneratedModelInfo(memoizer) {
 
     val boundObjectTypeElement: TypeElement?
 
@@ -32,7 +32,7 @@ internal class BasicGeneratedModelInfo(
         }
 
         constructors.addAll(getClassConstructors(superClassElement))
-        collectMethodsReturningClassType(superClassElement, types)
+        collectMethodsReturningClassType(superClassElement)
 
         if (typeVariableNames.isNotEmpty()) {
             this.parametrizedClassName = ParameterizedTypeName.get(
@@ -64,14 +64,14 @@ internal class BasicGeneratedModelInfo(
         // By default we don't extend classes that are abstract; if they don't contain all required
         // methods then our generated class won't compile. If there is a EpoxyModelClass annotation
         // though we will always generate the subclass
-        shouldGenerateModel = annotation != null || Modifier.ABSTRACT !in
-                superClassElement.modifiers
+        shouldGenerateModel =
+            annotation != null || Modifier.ABSTRACT !in superClassElement.modifiers
         includeOtherLayoutOptions = annotation?.useLayoutOverloads ?: false
 
-        val modelClassAnnotation = EpoxyModelClass::class.className()
+
         annotations.addAll(
             superClassElement.buildAnnotationSpecs {
-                it != modelClassAnnotation
+                it != memoizer.epoxyModelClassAnnotation
             }
         )
     }
