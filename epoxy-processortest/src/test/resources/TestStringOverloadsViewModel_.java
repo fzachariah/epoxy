@@ -31,7 +31,7 @@ public class TestStringOverloadsViewModel_ extends EpoxyModel<TestStringOverload
 
   /**
    * Bitset index: 0 */
-  private StringAttributeData title_StringAttributeData =  new StringAttributeData();
+  private StringAttributeData titleViaValueShortcut_StringAttributeData =  new StringAttributeData();
 
   /**
    * Bitset index: 1 */
@@ -40,13 +40,13 @@ public class TestStringOverloadsViewModel_ extends EpoxyModel<TestStringOverload
 
   /**
    * Bitset index: 2 */
-  private StringAttributeData titleViaValueShortcut_StringAttributeData =  new StringAttributeData();
+  private StringAttributeData title_StringAttributeData =  new StringAttributeData();
 
   @Override
   public void addTo(EpoxyController controller) {
     super.addTo(controller);
     addWithDebugValidation(controller);
-    if (!assignedAttributes_epoxyGeneratedModel.get(2)) {
+    if (!assignedAttributes_epoxyGeneratedModel.get(0)) {
     	throw new IllegalStateException("A value is required for setTitleViaValueShortcut");
     }
   }
@@ -61,7 +61,7 @@ public class TestStringOverloadsViewModel_ extends EpoxyModel<TestStringOverload
   public void bind(final TestStringOverloadsView object) {
     super.bind(object);
     object.setTitleViaValueShortcut(titleViaValueShortcut_StringAttributeData.toString(object.getContext()));
-    if (assignedAttributes_epoxyGeneratedModel.get(0)) {
+    if (assignedAttributes_epoxyGeneratedModel.get(2)) {
       object.setTitle(title_StringAttributeData.toString(object.getContext()));
     }
     else if (assignedAttributes_epoxyGeneratedModel.get(1)) {
@@ -85,8 +85,8 @@ public class TestStringOverloadsViewModel_ extends EpoxyModel<TestStringOverload
       object.setTitleViaValueShortcut(titleViaValueShortcut_StringAttributeData.toString(object.getContext()));
     }
 
-    if (assignedAttributes_epoxyGeneratedModel.get(0)) {
-      if (!that.assignedAttributes_epoxyGeneratedModel.get(0) || (title_StringAttributeData != null ? !title_StringAttributeData.equals(that.title_StringAttributeData) : that.title_StringAttributeData != null)) {
+    if (assignedAttributes_epoxyGeneratedModel.get(2)) {
+      if (!that.assignedAttributes_epoxyGeneratedModel.get(2) || (title_StringAttributeData != null ? !title_StringAttributeData.equals(that.title_StringAttributeData) : that.title_StringAttributeData != null)) {
         object.setTitle(title_StringAttributeData.toString(object.getContext()));
       }
     }
@@ -96,7 +96,7 @@ public class TestStringOverloadsViewModel_ extends EpoxyModel<TestStringOverload
       }
     }
     // A value was not set so we should use the default value, but we only need to set it if the previous model had a custom value set.
-    else if (that.assignedAttributes_epoxyGeneratedModel.get(0) || that.assignedAttributes_epoxyGeneratedModel.get(1)) {
+    else if (that.assignedAttributes_epoxyGeneratedModel.get(2) || that.assignedAttributes_epoxyGeneratedModel.get(1)) {
       object.setTitle(title_List);
     }
   }
@@ -188,87 +188,6 @@ public class TestStringOverloadsViewModel_ extends EpoxyModel<TestStringOverload
     return this;
   }
 
-  public CharSequence titleStringAttributeData(Context context) {
-    return title_StringAttributeData.toString(context);
-  }
-
-  /**
-   * <i>Required.</i>
-   *
-   * @see TestStringOverloadsView#setTitle(CharSequence)
-   */
-  public TestStringOverloadsViewModel_ title(@NonNull CharSequence title) {
-    onMutation();
-    assignedAttributes_epoxyGeneratedModel.set(0);
-    if (title == null) {
-      throw new IllegalArgumentException("title cannot be null");
-    }
-    title_StringAttributeData.setValue(title);
-    return this;
-  }
-
-  /**
-   * Throws if a value <= 0 is set.
-   * <p>
-   * <i>Required.</i>
-   *
-   * @see TestStringOverloadsView#setTitle(CharSequence)
-   */
-  public TestStringOverloadsViewModel_ title(@StringRes int stringRes) {
-    onMutation();
-    assignedAttributes_epoxyGeneratedModel.set(0);
-    title_StringAttributeData.setValue(stringRes);
-    return this;
-  }
-
-  /**
-   * Throws if a value <= 0 is set.
-   * <p>
-   * <i>Required.</i>
-   *
-   * @see TestStringOverloadsView#setTitle(CharSequence)
-   */
-  public TestStringOverloadsViewModel_ title(@StringRes int stringRes, Object... formatArgs) {
-    onMutation();
-    assignedAttributes_epoxyGeneratedModel.set(0);
-    title_StringAttributeData.setValue(stringRes, formatArgs);
-    return this;
-  }
-
-  /**
-   * Throws if a value <= 0 is set.
-   * <p>
-   * <i>Required.</i>
-   *
-   * @see TestStringOverloadsView#setTitle(CharSequence)
-   */
-  public TestStringOverloadsViewModel_ titleQuantityRes(@PluralsRes int pluralRes, int quantity,
-      Object... formatArgs) {
-    onMutation();
-    assignedAttributes_epoxyGeneratedModel.set(0);
-    title_StringAttributeData.setValue(pluralRes, quantity, formatArgs);
-    return this;
-  }
-
-  /**
-   * <i>Optional</i>: Default value is (List<CharSequence>) null
-   *
-   * @see TestStringOverloadsView#setTitle(List<CharSequence>)
-   */
-  public TestStringOverloadsViewModel_ title(@Nullable List<CharSequence> title) {
-    assignedAttributes_epoxyGeneratedModel.set(1);
-    assignedAttributes_epoxyGeneratedModel.clear(0);
-    this.title_StringAttributeData =  new StringAttributeData();
-    onMutation();
-    this.title_List = title;
-    return this;
-  }
-
-  @Nullable
-  public List<CharSequence> titleList() {
-    return title_List;
-  }
-
   public CharSequence getTitleViaValueShortcut(Context context) {
     return titleViaValueShortcut_StringAttributeData.toString(context);
   }
@@ -281,7 +200,7 @@ public class TestStringOverloadsViewModel_ extends EpoxyModel<TestStringOverload
   public TestStringOverloadsViewModel_ titleViaValueShortcut(
       @NonNull CharSequence titleViaValueShortcut) {
     onMutation();
-    assignedAttributes_epoxyGeneratedModel.set(2);
+    assignedAttributes_epoxyGeneratedModel.set(0);
     if (titleViaValueShortcut == null) {
       throw new IllegalArgumentException("titleViaValueShortcut cannot be null");
     }
@@ -298,7 +217,7 @@ public class TestStringOverloadsViewModel_ extends EpoxyModel<TestStringOverload
    */
   public TestStringOverloadsViewModel_ titleViaValueShortcut(@StringRes int stringRes) {
     onMutation();
-    assignedAttributes_epoxyGeneratedModel.set(2);
+    assignedAttributes_epoxyGeneratedModel.set(0);
     titleViaValueShortcut_StringAttributeData.setValue(stringRes);
     return this;
   }
@@ -313,7 +232,7 @@ public class TestStringOverloadsViewModel_ extends EpoxyModel<TestStringOverload
   public TestStringOverloadsViewModel_ titleViaValueShortcut(@StringRes int stringRes,
       Object... formatArgs) {
     onMutation();
-    assignedAttributes_epoxyGeneratedModel.set(2);
+    assignedAttributes_epoxyGeneratedModel.set(0);
     titleViaValueShortcut_StringAttributeData.setValue(stringRes, formatArgs);
     return this;
   }
@@ -328,8 +247,89 @@ public class TestStringOverloadsViewModel_ extends EpoxyModel<TestStringOverload
   public TestStringOverloadsViewModel_ titleViaValueShortcutQuantityRes(@PluralsRes int pluralRes,
       int quantity, Object... formatArgs) {
     onMutation();
-    assignedAttributes_epoxyGeneratedModel.set(2);
+    assignedAttributes_epoxyGeneratedModel.set(0);
     titleViaValueShortcut_StringAttributeData.setValue(pluralRes, quantity, formatArgs);
+    return this;
+  }
+
+  /**
+   * <i>Optional</i>: Default value is (List<CharSequence>) null
+   *
+   * @see TestStringOverloadsView#setTitle(List<CharSequence>)
+   */
+  public TestStringOverloadsViewModel_ title(@Nullable List<CharSequence> title) {
+    assignedAttributes_epoxyGeneratedModel.set(1);
+    assignedAttributes_epoxyGeneratedModel.clear(2);
+    this.title_StringAttributeData =  new StringAttributeData();
+    onMutation();
+    this.title_List = title;
+    return this;
+  }
+
+  @Nullable
+  public List<CharSequence> titleList() {
+    return title_List;
+  }
+
+  public CharSequence titleStringAttributeData(Context context) {
+    return title_StringAttributeData.toString(context);
+  }
+
+  /**
+   * <i>Required.</i>
+   *
+   * @see TestStringOverloadsView#setTitle(CharSequence)
+   */
+  public TestStringOverloadsViewModel_ title(@NonNull CharSequence title) {
+    onMutation();
+    assignedAttributes_epoxyGeneratedModel.set(2);
+    if (title == null) {
+      throw new IllegalArgumentException("title cannot be null");
+    }
+    title_StringAttributeData.setValue(title);
+    return this;
+  }
+
+  /**
+   * Throws if a value <= 0 is set.
+   * <p>
+   * <i>Required.</i>
+   *
+   * @see TestStringOverloadsView#setTitle(CharSequence)
+   */
+  public TestStringOverloadsViewModel_ title(@StringRes int stringRes) {
+    onMutation();
+    assignedAttributes_epoxyGeneratedModel.set(2);
+    title_StringAttributeData.setValue(stringRes);
+    return this;
+  }
+
+  /**
+   * Throws if a value <= 0 is set.
+   * <p>
+   * <i>Required.</i>
+   *
+   * @see TestStringOverloadsView#setTitle(CharSequence)
+   */
+  public TestStringOverloadsViewModel_ title(@StringRes int stringRes, Object... formatArgs) {
+    onMutation();
+    assignedAttributes_epoxyGeneratedModel.set(2);
+    title_StringAttributeData.setValue(stringRes, formatArgs);
+    return this;
+  }
+
+  /**
+   * Throws if a value <= 0 is set.
+   * <p>
+   * <i>Required.</i>
+   *
+   * @see TestStringOverloadsView#setTitle(CharSequence)
+   */
+  public TestStringOverloadsViewModel_ titleQuantityRes(@PluralsRes int pluralRes, int quantity,
+      Object... formatArgs) {
+    onMutation();
+    assignedAttributes_epoxyGeneratedModel.set(2);
+    title_StringAttributeData.setValue(pluralRes, quantity, formatArgs);
     return this;
   }
 
@@ -414,9 +414,9 @@ public class TestStringOverloadsViewModel_ extends EpoxyModel<TestStringOverload
     onModelVisibilityStateChangedListener_epoxyGeneratedModel = null;
     onModelVisibilityChangedListener_epoxyGeneratedModel = null;
     assignedAttributes_epoxyGeneratedModel.clear();
-    this.title_StringAttributeData =  new StringAttributeData();
-    this.title_List = (List<CharSequence>) null;
     this.titleViaValueShortcut_StringAttributeData =  new StringAttributeData();
+    this.title_List = (List<CharSequence>) null;
+    this.title_StringAttributeData =  new StringAttributeData();
     super.reset();
     return this;
   }
@@ -445,13 +445,13 @@ public class TestStringOverloadsViewModel_ extends EpoxyModel<TestStringOverload
     if (((onModelVisibilityChangedListener_epoxyGeneratedModel == null) != (that.onModelVisibilityChangedListener_epoxyGeneratedModel == null))) {
       return false;
     }
-    if ((title_StringAttributeData != null ? !title_StringAttributeData.equals(that.title_StringAttributeData) : that.title_StringAttributeData != null)) {
+    if ((titleViaValueShortcut_StringAttributeData != null ? !titleViaValueShortcut_StringAttributeData.equals(that.titleViaValueShortcut_StringAttributeData) : that.titleViaValueShortcut_StringAttributeData != null)) {
       return false;
     }
     if ((title_List != null ? !title_List.equals(that.title_List) : that.title_List != null)) {
       return false;
     }
-    if ((titleViaValueShortcut_StringAttributeData != null ? !titleViaValueShortcut_StringAttributeData.equals(that.titleViaValueShortcut_StringAttributeData) : that.titleViaValueShortcut_StringAttributeData != null)) {
+    if ((title_StringAttributeData != null ? !title_StringAttributeData.equals(that.title_StringAttributeData) : that.title_StringAttributeData != null)) {
       return false;
     }
     return true;
@@ -464,18 +464,18 @@ public class TestStringOverloadsViewModel_ extends EpoxyModel<TestStringOverload
     _result = 31 * _result + (onModelUnboundListener_epoxyGeneratedModel != null ? 1 : 0);
     _result = 31 * _result + (onModelVisibilityStateChangedListener_epoxyGeneratedModel != null ? 1 : 0);
     _result = 31 * _result + (onModelVisibilityChangedListener_epoxyGeneratedModel != null ? 1 : 0);
-    _result = 31 * _result + (title_StringAttributeData != null ? title_StringAttributeData.hashCode() : 0);
-    _result = 31 * _result + (title_List != null ? title_List.hashCode() : 0);
     _result = 31 * _result + (titleViaValueShortcut_StringAttributeData != null ? titleViaValueShortcut_StringAttributeData.hashCode() : 0);
+    _result = 31 * _result + (title_List != null ? title_List.hashCode() : 0);
+    _result = 31 * _result + (title_StringAttributeData != null ? title_StringAttributeData.hashCode() : 0);
     return _result;
   }
 
   @Override
   public String toString() {
     return "TestStringOverloadsViewModel_{" +
-        "title_StringAttributeData=" + title_StringAttributeData +
+        "titleViaValueShortcut_StringAttributeData=" + titleViaValueShortcut_StringAttributeData +
         ", title_List=" + title_List +
-        ", titleViaValueShortcut_StringAttributeData=" + titleViaValueShortcut_StringAttributeData +
+        ", title_StringAttributeData=" + title_StringAttributeData +
         "}" + super.toString();
   }
 

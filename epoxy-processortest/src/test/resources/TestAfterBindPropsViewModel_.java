@@ -24,11 +24,11 @@ public class TestAfterBindPropsViewModel_ extends EpoxyModel<TestAfterBindPropsV
 
   /**
    * Bitset index: 0 */
-  private boolean flag_Boolean = false;
+  private boolean flagSuper_Boolean = false;
 
   /**
    * Bitset index: 1 */
-  private boolean flagSuper_Boolean = false;
+  private boolean flag_Boolean = false;
 
   @Override
   public void addTo(EpoxyController controller) {
@@ -159,26 +159,10 @@ public class TestAfterBindPropsViewModel_ extends EpoxyModel<TestAfterBindPropsV
   /**
    * <i>Optional</i>: Default value is false
    *
-   * @see TestAfterBindPropsView#setFlag(boolean)
-   */
-  public TestAfterBindPropsViewModel_ flag(boolean flag) {
-    assignedAttributes_epoxyGeneratedModel.set(0);
-    onMutation();
-    this.flag_Boolean = flag;
-    return this;
-  }
-
-  public boolean flag() {
-    return flag_Boolean;
-  }
-
-  /**
-   * <i>Optional</i>: Default value is false
-   *
    * @see TestAfterBindPropsView#setFlagSuper(boolean)
    */
   public TestAfterBindPropsViewModel_ flagSuper(boolean flagSuper) {
-    assignedAttributes_epoxyGeneratedModel.set(1);
+    assignedAttributes_epoxyGeneratedModel.set(0);
     onMutation();
     this.flagSuper_Boolean = flagSuper;
     return this;
@@ -186,6 +170,22 @@ public class TestAfterBindPropsViewModel_ extends EpoxyModel<TestAfterBindPropsV
 
   public boolean flagSuper() {
     return flagSuper_Boolean;
+  }
+
+  /**
+   * <i>Optional</i>: Default value is false
+   *
+   * @see TestAfterBindPropsView#setFlag(boolean)
+   */
+  public TestAfterBindPropsViewModel_ flag(boolean flag) {
+    assignedAttributes_epoxyGeneratedModel.set(1);
+    onMutation();
+    this.flag_Boolean = flag;
+    return this;
+  }
+
+  public boolean flag() {
+    return flag_Boolean;
   }
 
   @Override
@@ -269,8 +269,8 @@ public class TestAfterBindPropsViewModel_ extends EpoxyModel<TestAfterBindPropsV
     onModelVisibilityStateChangedListener_epoxyGeneratedModel = null;
     onModelVisibilityChangedListener_epoxyGeneratedModel = null;
     assignedAttributes_epoxyGeneratedModel.clear();
-    this.flag_Boolean = false;
     this.flagSuper_Boolean = false;
+    this.flag_Boolean = false;
     super.reset();
     return this;
   }
@@ -299,10 +299,10 @@ public class TestAfterBindPropsViewModel_ extends EpoxyModel<TestAfterBindPropsV
     if (((onModelVisibilityChangedListener_epoxyGeneratedModel == null) != (that.onModelVisibilityChangedListener_epoxyGeneratedModel == null))) {
       return false;
     }
-    if ((flag_Boolean != that.flag_Boolean)) {
+    if ((flagSuper_Boolean != that.flagSuper_Boolean)) {
       return false;
     }
-    if ((flagSuper_Boolean != that.flagSuper_Boolean)) {
+    if ((flag_Boolean != that.flag_Boolean)) {
       return false;
     }
     return true;
@@ -315,16 +315,16 @@ public class TestAfterBindPropsViewModel_ extends EpoxyModel<TestAfterBindPropsV
     _result = 31 * _result + (onModelUnboundListener_epoxyGeneratedModel != null ? 1 : 0);
     _result = 31 * _result + (onModelVisibilityStateChangedListener_epoxyGeneratedModel != null ? 1 : 0);
     _result = 31 * _result + (onModelVisibilityChangedListener_epoxyGeneratedModel != null ? 1 : 0);
-    _result = 31 * _result + (flag_Boolean ? 1 : 0);
     _result = 31 * _result + (flagSuper_Boolean ? 1 : 0);
+    _result = 31 * _result + (flag_Boolean ? 1 : 0);
     return _result;
   }
 
   @Override
   public String toString() {
     return "TestAfterBindPropsViewModel_{" +
-        "flag_Boolean=" + flag_Boolean +
-        ", flagSuper_Boolean=" + flagSuper_Boolean +
+        "flagSuper_Boolean=" + flagSuper_Boolean +
+        ", flag_Boolean=" + flag_Boolean +
         "}" + super.toString();
   }
 

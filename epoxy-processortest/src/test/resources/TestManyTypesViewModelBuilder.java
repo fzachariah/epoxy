@@ -29,37 +29,37 @@ public interface TestManyTypesViewModelBuilder {
   TestManyTypesViewModelBuilder onVisibilityChanged(
       OnModelVisibilityChangedListener<TestManyTypesViewModel_, TestManyTypesView> listener);
 
-  TestManyTypesViewModelBuilder stringValue(@NonNull String stringValue);
+  TestManyTypesViewModelBuilder arrayValue(@NonNull String[] arrayValue);
 
-  TestManyTypesViewModelBuilder nullableStringValue(@Nullable String nullableStringValue);
+  TestManyTypesViewModelBuilder boolValue(boolean boolValue);
 
-  TestManyTypesViewModelBuilder intValue(int intValue);
+  TestManyTypesViewModelBuilder booleanValue(@NonNull Boolean booleanValue);
+
+  TestManyTypesViewModelBuilder clickListener(
+      @NonNull final OnModelClickListener<TestManyTypesViewModel_, TestManyTypesView> clickListener);
+
+  TestManyTypesViewModelBuilder clickListener(@NonNull View.OnClickListener clickListener);
 
   TestManyTypesViewModelBuilder intValueWithAnnotation(@StringRes int intValueWithAnnotation);
+
+  TestManyTypesViewModelBuilder intValueWithDimenTypeAnnotation(
+      @Dimension(unit = 0) int intValueWithDimenTypeAnnotation);
 
   TestManyTypesViewModelBuilder intValueWithRangeAnnotation(
       @IntRange(from = 0, to = 200) int intValueWithRangeAnnotation);
 
-  TestManyTypesViewModelBuilder intValueWithDimenTypeAnnotation(
-      @Dimension(unit = 0) int intValueWithDimenTypeAnnotation);
+  TestManyTypesViewModelBuilder intValue(int intValue);
 
   TestManyTypesViewModelBuilder intWithMultipleAnnotations(
       @IntRange(from = 0, to = 200) @Dimension(unit = 0) int intWithMultipleAnnotations);
 
   TestManyTypesViewModelBuilder integerValue(@NonNull Integer integerValue);
 
-  TestManyTypesViewModelBuilder boolValue(boolean boolValue);
-
-  TestManyTypesViewModelBuilder booleanValue(@NonNull Boolean booleanValue);
-
-  TestManyTypesViewModelBuilder arrayValue(@NonNull String[] arrayValue);
-
   TestManyTypesViewModelBuilder listValue(@NonNull List<String> listValue);
 
-  TestManyTypesViewModelBuilder clickListener(
-      @NonNull final OnModelClickListener<TestManyTypesViewModel_, TestManyTypesView> clickListener);
+  TestManyTypesViewModelBuilder nullableStringValue(@Nullable String nullableStringValue);
 
-  TestManyTypesViewModelBuilder clickListener(@NonNull View.OnClickListener clickListener);
+  TestManyTypesViewModelBuilder stringValue(@NonNull String stringValue);
 
   TestManyTypesViewModelBuilder title(@Nullable CharSequence title);
 

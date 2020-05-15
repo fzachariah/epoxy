@@ -141,7 +141,7 @@ class GeneratedModelWriter(
 
         // sort attributes alphabetically for consistent code generation when attributes
         // are added concurrently.
-//        info.attributeInfo.sort()
+        info.attributeInfo.sort()
 
         val generatedModelName = info.generatedName
 

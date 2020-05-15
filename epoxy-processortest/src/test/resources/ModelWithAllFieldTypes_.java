@@ -131,44 +131,34 @@ public class ModelWithAllFieldTypes_ extends ModelWithAllFieldTypes implements G
     return this;
   }
 
-  public ModelWithAllFieldTypes_ valueInt(int valueInt) {
+  public ModelWithAllFieldTypes_ valueBoolean(boolean valueBoolean) {
     onMutation();
-    super.valueInt = valueInt;
+    super.valueBoolean = valueBoolean;
     return this;
   }
 
-  public int valueInt() {
-    return valueInt;
+  public boolean valueBoolean() {
+    return valueBoolean;
   }
 
-  public ModelWithAllFieldTypes_ valueInteger(Integer valueInteger) {
+  public ModelWithAllFieldTypes_ valueBooleanWrapper(Boolean valueBooleanWrapper) {
     onMutation();
-    super.valueInteger = valueInteger;
+    super.valueBooleanWrapper = valueBooleanWrapper;
     return this;
   }
 
-  public Integer valueInteger() {
-    return valueInteger;
+  public Boolean valueBooleanWrapper() {
+    return valueBooleanWrapper;
   }
 
-  public ModelWithAllFieldTypes_ valueShort(short valueShort) {
+  public ModelWithAllFieldTypes_ valueByteWrapper(Byte valueByteWrapper) {
     onMutation();
-    super.valueShort = valueShort;
+    super.valueByteWrapper = valueByteWrapper;
     return this;
   }
 
-  public short valueShort() {
-    return valueShort;
-  }
-
-  public ModelWithAllFieldTypes_ valueShortWrapper(Short valueShortWrapper) {
-    onMutation();
-    super.valueShortWrapper = valueShortWrapper;
-    return this;
-  }
-
-  public Short valueShortWrapper() {
-    return valueShortWrapper;
+  public Byte valueByteWrapper() {
+    return valueByteWrapper;
   }
 
   public ModelWithAllFieldTypes_ valueChar(char valueChar) {
@@ -189,46 +179,6 @@ public class ModelWithAllFieldTypes_ extends ModelWithAllFieldTypes implements G
 
   public Character valueCharacter() {
     return valueCharacter;
-  }
-
-  public ModelWithAllFieldTypes_ valuebByte(byte valuebByte) {
-    onMutation();
-    super.valuebByte = valuebByte;
-    return this;
-  }
-
-  public byte valuebByte() {
-    return valuebByte;
-  }
-
-  public ModelWithAllFieldTypes_ valueByteWrapper(Byte valueByteWrapper) {
-    onMutation();
-    super.valueByteWrapper = valueByteWrapper;
-    return this;
-  }
-
-  public Byte valueByteWrapper() {
-    return valueByteWrapper;
-  }
-
-  public ModelWithAllFieldTypes_ valueLong(long valueLong) {
-    onMutation();
-    super.valueLong = valueLong;
-    return this;
-  }
-
-  public long valueLong() {
-    return valueLong;
-  }
-
-  public ModelWithAllFieldTypes_ valueLongWrapper(Long valueLongWrapper) {
-    onMutation();
-    super.valueLongWrapper = valueLongWrapper;
-    return this;
-  }
-
-  public Long valueLongWrapper() {
-    return valueLongWrapper;
   }
 
   public ModelWithAllFieldTypes_ valueDouble(double valueDouble) {
@@ -271,24 +221,14 @@ public class ModelWithAllFieldTypes_ extends ModelWithAllFieldTypes implements G
     return valueFloatWrapper;
   }
 
-  public ModelWithAllFieldTypes_ valueBoolean(boolean valueBoolean) {
+  public ModelWithAllFieldTypes_ valueInt(int valueInt) {
     onMutation();
-    super.valueBoolean = valueBoolean;
+    super.valueInt = valueInt;
     return this;
   }
 
-  public boolean valueBoolean() {
-    return valueBoolean;
-  }
-
-  public ModelWithAllFieldTypes_ valueBooleanWrapper(Boolean valueBooleanWrapper) {
-    onMutation();
-    super.valueBooleanWrapper = valueBooleanWrapper;
-    return this;
-  }
-
-  public Boolean valueBooleanWrapper() {
-    return valueBooleanWrapper;
+  public int valueInt() {
+    return valueInt;
   }
 
   public ModelWithAllFieldTypes_ valueIntArray(int[] valueIntArray) {
@@ -301,24 +241,44 @@ public class ModelWithAllFieldTypes_ extends ModelWithAllFieldTypes implements G
     return valueIntArray;
   }
 
-  public ModelWithAllFieldTypes_ valueObjectArray(Object[] valueObjectArray) {
+  public ModelWithAllFieldTypes_ valueInteger(Integer valueInteger) {
     onMutation();
-    super.valueObjectArray = valueObjectArray;
+    super.valueInteger = valueInteger;
     return this;
   }
 
-  public Object[] valueObjectArray() {
-    return valueObjectArray;
+  public Integer valueInteger() {
+    return valueInteger;
   }
 
-  public ModelWithAllFieldTypes_ valueString(String valueString) {
+  public ModelWithAllFieldTypes_ valueList(List<String> valueList) {
     onMutation();
-    super.valueString = valueString;
+    super.valueList = valueList;
     return this;
   }
 
-  public String valueString() {
-    return valueString;
+  public List<String> valueList() {
+    return valueList;
+  }
+
+  public ModelWithAllFieldTypes_ valueLong(long valueLong) {
+    onMutation();
+    super.valueLong = valueLong;
+    return this;
+  }
+
+  public long valueLong() {
+    return valueLong;
+  }
+
+  public ModelWithAllFieldTypes_ valueLongWrapper(Long valueLongWrapper) {
+    onMutation();
+    super.valueLongWrapper = valueLongWrapper;
+    return this;
+  }
+
+  public Long valueLongWrapper() {
+    return valueLongWrapper;
   }
 
   public ModelWithAllFieldTypes_ valueObject(Object valueObject) {
@@ -331,14 +291,54 @@ public class ModelWithAllFieldTypes_ extends ModelWithAllFieldTypes implements G
     return valueObject;
   }
 
-  public ModelWithAllFieldTypes_ valueList(List<String> valueList) {
+  public ModelWithAllFieldTypes_ valueObjectArray(Object[] valueObjectArray) {
     onMutation();
-    super.valueList = valueList;
+    super.valueObjectArray = valueObjectArray;
     return this;
   }
 
-  public List<String> valueList() {
-    return valueList;
+  public Object[] valueObjectArray() {
+    return valueObjectArray;
+  }
+
+  public ModelWithAllFieldTypes_ valueShort(short valueShort) {
+    onMutation();
+    super.valueShort = valueShort;
+    return this;
+  }
+
+  public short valueShort() {
+    return valueShort;
+  }
+
+  public ModelWithAllFieldTypes_ valueShortWrapper(Short valueShortWrapper) {
+    onMutation();
+    super.valueShortWrapper = valueShortWrapper;
+    return this;
+  }
+
+  public Short valueShortWrapper() {
+    return valueShortWrapper;
+  }
+
+  public ModelWithAllFieldTypes_ valueString(String valueString) {
+    onMutation();
+    super.valueString = valueString;
+    return this;
+  }
+
+  public String valueString() {
+    return valueString;
+  }
+
+  public ModelWithAllFieldTypes_ valuebByte(byte valuebByte) {
+    onMutation();
+    super.valuebByte = valuebByte;
+    return this;
+  }
+
+  public byte valuebByte() {
+    return valuebByte;
   }
 
   @Override
@@ -414,27 +414,27 @@ public class ModelWithAllFieldTypes_ extends ModelWithAllFieldTypes implements G
     onModelUnboundListener_epoxyGeneratedModel = null;
     onModelVisibilityStateChangedListener_epoxyGeneratedModel = null;
     onModelVisibilityChangedListener_epoxyGeneratedModel = null;
-    super.valueInt = 0;
-    super.valueInteger = null;
-    super.valueShort = (short) 0;
-    super.valueShortWrapper = null;
+    super.valueBoolean = false;
+    super.valueBooleanWrapper = null;
+    super.valueByteWrapper = null;
     super.valueChar = (char) 0;
     super.valueCharacter = null;
-    super.valuebByte = (byte) 0;
-    super.valueByteWrapper = null;
-    super.valueLong = 0L;
-    super.valueLongWrapper = null;
     super.valueDouble = 0.0d;
     super.valueDoubleWrapper = null;
     super.valueFloat = 0.0f;
     super.valueFloatWrapper = null;
-    super.valueBoolean = false;
-    super.valueBooleanWrapper = null;
+    super.valueInt = 0;
     super.valueIntArray = null;
-    super.valueObjectArray = null;
-    super.valueString = null;
-    super.valueObject = null;
+    super.valueInteger = null;
     super.valueList = null;
+    super.valueLong = 0L;
+    super.valueLongWrapper = null;
+    super.valueObject = null;
+    super.valueObjectArray = null;
+    super.valueShort = (short) 0;
+    super.valueShortWrapper = null;
+    super.valueString = null;
+    super.valuebByte = (byte) 0;
     super.reset();
     return this;
   }
@@ -463,34 +463,19 @@ public class ModelWithAllFieldTypes_ extends ModelWithAllFieldTypes implements G
     if (((onModelVisibilityChangedListener_epoxyGeneratedModel == null) != (that.onModelVisibilityChangedListener_epoxyGeneratedModel == null))) {
       return false;
     }
-    if ((valueInt != that.valueInt)) {
+    if ((valueBoolean != that.valueBoolean)) {
       return false;
     }
-    if ((valueInteger != null ? !valueInteger.equals(that.valueInteger) : that.valueInteger != null)) {
+    if ((valueBooleanWrapper != null ? !valueBooleanWrapper.equals(that.valueBooleanWrapper) : that.valueBooleanWrapper != null)) {
       return false;
     }
-    if ((valueShort != that.valueShort)) {
-      return false;
-    }
-    if ((valueShortWrapper != null ? !valueShortWrapper.equals(that.valueShortWrapper) : that.valueShortWrapper != null)) {
+    if ((valueByteWrapper != null ? !valueByteWrapper.equals(that.valueByteWrapper) : that.valueByteWrapper != null)) {
       return false;
     }
     if ((valueChar != that.valueChar)) {
       return false;
     }
     if ((valueCharacter != null ? !valueCharacter.equals(that.valueCharacter) : that.valueCharacter != null)) {
-      return false;
-    }
-    if ((valuebByte != that.valuebByte)) {
-      return false;
-    }
-    if ((valueByteWrapper != null ? !valueByteWrapper.equals(that.valueByteWrapper) : that.valueByteWrapper != null)) {
-      return false;
-    }
-    if ((valueLong != that.valueLong)) {
-      return false;
-    }
-    if ((valueLongWrapper != null ? !valueLongWrapper.equals(that.valueLongWrapper) : that.valueLongWrapper != null)) {
       return false;
     }
     if ((Double.compare(that.valueDouble, valueDouble) != 0)) {
@@ -505,25 +490,40 @@ public class ModelWithAllFieldTypes_ extends ModelWithAllFieldTypes implements G
     if ((valueFloatWrapper != null ? !valueFloatWrapper.equals(that.valueFloatWrapper) : that.valueFloatWrapper != null)) {
       return false;
     }
-    if ((valueBoolean != that.valueBoolean)) {
-      return false;
-    }
-    if ((valueBooleanWrapper != null ? !valueBooleanWrapper.equals(that.valueBooleanWrapper) : that.valueBooleanWrapper != null)) {
+    if ((valueInt != that.valueInt)) {
       return false;
     }
     if (!Arrays.equals(valueIntArray, that.valueIntArray)) {
       return false;
     }
-    if (!Arrays.equals(valueObjectArray, that.valueObjectArray)) {
+    if ((valueInteger != null ? !valueInteger.equals(that.valueInteger) : that.valueInteger != null)) {
       return false;
     }
-    if ((valueString != null ? !valueString.equals(that.valueString) : that.valueString != null)) {
+    if ((valueList != null ? !valueList.equals(that.valueList) : that.valueList != null)) {
+      return false;
+    }
+    if ((valueLong != that.valueLong)) {
+      return false;
+    }
+    if ((valueLongWrapper != null ? !valueLongWrapper.equals(that.valueLongWrapper) : that.valueLongWrapper != null)) {
       return false;
     }
     if ((valueObject != null ? !valueObject.equals(that.valueObject) : that.valueObject != null)) {
       return false;
     }
-    if ((valueList != null ? !valueList.equals(that.valueList) : that.valueList != null)) {
+    if (!Arrays.equals(valueObjectArray, that.valueObjectArray)) {
+      return false;
+    }
+    if ((valueShort != that.valueShort)) {
+      return false;
+    }
+    if ((valueShortWrapper != null ? !valueShortWrapper.equals(that.valueShortWrapper) : that.valueShortWrapper != null)) {
+      return false;
+    }
+    if ((valueString != null ? !valueString.equals(that.valueString) : that.valueString != null)) {
+      return false;
+    }
+    if ((valuebByte != that.valuebByte)) {
       return false;
     }
     return true;
@@ -537,55 +537,55 @@ public class ModelWithAllFieldTypes_ extends ModelWithAllFieldTypes implements G
     _result = 31 * _result + (onModelVisibilityStateChangedListener_epoxyGeneratedModel != null ? 1 : 0);
     _result = 31 * _result + (onModelVisibilityChangedListener_epoxyGeneratedModel != null ? 1 : 0);
     long temp;
-    _result = 31 * _result + valueInt;
-    _result = 31 * _result + (valueInteger != null ? valueInteger.hashCode() : 0);
-    _result = 31 * _result + valueShort;
-    _result = 31 * _result + (valueShortWrapper != null ? valueShortWrapper.hashCode() : 0);
+    _result = 31 * _result + (valueBoolean ? 1 : 0);
+    _result = 31 * _result + (valueBooleanWrapper != null ? valueBooleanWrapper.hashCode() : 0);
+    _result = 31 * _result + (valueByteWrapper != null ? valueByteWrapper.hashCode() : 0);
     _result = 31 * _result + valueChar;
     _result = 31 * _result + (valueCharacter != null ? valueCharacter.hashCode() : 0);
-    _result = 31 * _result + valuebByte;
-    _result = 31 * _result + (valueByteWrapper != null ? valueByteWrapper.hashCode() : 0);
-    _result = 31 * _result + (int) (valueLong ^ (valueLong >>> 32));
-    _result = 31 * _result + (valueLongWrapper != null ? valueLongWrapper.hashCode() : 0);
     temp = Double.doubleToLongBits(valueDouble);
     _result = 31 * _result + (int) (temp ^ (temp >>> 32));
     _result = 31 * _result + (valueDoubleWrapper != null ? valueDoubleWrapper.hashCode() : 0);
     _result = 31 * _result + (valueFloat != +0.0f ? Float.floatToIntBits(valueFloat) : 0);
     _result = 31 * _result + (valueFloatWrapper != null ? valueFloatWrapper.hashCode() : 0);
-    _result = 31 * _result + (valueBoolean ? 1 : 0);
-    _result = 31 * _result + (valueBooleanWrapper != null ? valueBooleanWrapper.hashCode() : 0);
+    _result = 31 * _result + valueInt;
     _result = 31 * _result + Arrays.hashCode(valueIntArray);
-    _result = 31 * _result + Arrays.hashCode(valueObjectArray);
-    _result = 31 * _result + (valueString != null ? valueString.hashCode() : 0);
-    _result = 31 * _result + (valueObject != null ? valueObject.hashCode() : 0);
+    _result = 31 * _result + (valueInteger != null ? valueInteger.hashCode() : 0);
     _result = 31 * _result + (valueList != null ? valueList.hashCode() : 0);
+    _result = 31 * _result + (int) (valueLong ^ (valueLong >>> 32));
+    _result = 31 * _result + (valueLongWrapper != null ? valueLongWrapper.hashCode() : 0);
+    _result = 31 * _result + (valueObject != null ? valueObject.hashCode() : 0);
+    _result = 31 * _result + Arrays.hashCode(valueObjectArray);
+    _result = 31 * _result + valueShort;
+    _result = 31 * _result + (valueShortWrapper != null ? valueShortWrapper.hashCode() : 0);
+    _result = 31 * _result + (valueString != null ? valueString.hashCode() : 0);
+    _result = 31 * _result + valuebByte;
     return _result;
   }
 
   @Override
   public String toString() {
     return "ModelWithAllFieldTypes_{" +
-        "valueInt=" + valueInt +
-        ", valueInteger=" + valueInteger +
-        ", valueShort=" + valueShort +
-        ", valueShortWrapper=" + valueShortWrapper +
+        "valueBoolean=" + valueBoolean +
+        ", valueBooleanWrapper=" + valueBooleanWrapper +
+        ", valueByteWrapper=" + valueByteWrapper +
         ", valueChar=" + valueChar +
         ", valueCharacter=" + valueCharacter +
-        ", valuebByte=" + valuebByte +
-        ", valueByteWrapper=" + valueByteWrapper +
-        ", valueLong=" + valueLong +
-        ", valueLongWrapper=" + valueLongWrapper +
         ", valueDouble=" + valueDouble +
         ", valueDoubleWrapper=" + valueDoubleWrapper +
         ", valueFloat=" + valueFloat +
         ", valueFloatWrapper=" + valueFloatWrapper +
-        ", valueBoolean=" + valueBoolean +
-        ", valueBooleanWrapper=" + valueBooleanWrapper +
+        ", valueInt=" + valueInt +
         ", valueIntArray=" + valueIntArray +
-        ", valueObjectArray=" + valueObjectArray +
-        ", valueString=" + valueString +
-        ", valueObject=" + valueObject +
+        ", valueInteger=" + valueInteger +
         ", valueList=" + valueList +
+        ", valueLong=" + valueLong +
+        ", valueLongWrapper=" + valueLongWrapper +
+        ", valueObject=" + valueObject +
+        ", valueObjectArray=" + valueObjectArray +
+        ", valueShort=" + valueShort +
+        ", valueShortWrapper=" + valueShortWrapper +
+        ", valueString=" + valueString +
+        ", valuebByte=" + valuebByte +
         "}" + super.toString();
   }
 }

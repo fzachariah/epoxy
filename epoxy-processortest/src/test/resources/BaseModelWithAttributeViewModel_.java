@@ -26,7 +26,7 @@ public class BaseModelViewModel_ extends TestBaseModel<BaseModelView> implements
   private OnModelVisibilityChangedListener<BaseModelViewModel_, BaseModelView> onModelVisibilityChangedListener_epoxyGeneratedModel;
 
   /**
-   * Bitset index: 0 */
+   * Bitset index: 1 */
   @NonNull
   private String clickListener_String;
 
@@ -38,7 +38,7 @@ public class BaseModelViewModel_ extends TestBaseModel<BaseModelView> implements
   public void addTo(EpoxyController controller) {
     super.addTo(controller);
     addWithDebugValidation(controller);
-    if (!assignedAttributes_epoxyGeneratedModel.get(0)) {
+    if (!assignedAttributes_epoxyGeneratedModel.get(1)) {
     	throw new IllegalStateException("A value is required for setClickListener");
     }
   }
@@ -156,6 +156,17 @@ public class BaseModelViewModel_ extends TestBaseModel<BaseModelView> implements
     return this;
   }
 
+  public BaseModelViewModel_ baseModelString(String baseModelString) {
+    assignedAttributes_epoxyGeneratedModel.set(0);
+    onMutation();
+    super.baseModelString = baseModelString;
+    return this;
+  }
+
+  public String baseModelString() {
+    return baseModelString;
+  }
+
   /**
    * <i>Required.</i>
    *
@@ -165,7 +176,7 @@ public class BaseModelViewModel_ extends TestBaseModel<BaseModelView> implements
     if (clickListener == null) {
       throw new IllegalArgumentException("clickListener cannot be null");
     }
-    assignedAttributes_epoxyGeneratedModel.set(0);
+    assignedAttributes_epoxyGeneratedModel.set(1);
     onMutation();
     this.clickListener_String = clickListener;
     return this;
@@ -174,17 +185,6 @@ public class BaseModelViewModel_ extends TestBaseModel<BaseModelView> implements
   @NonNull
   public String clickListener() {
     return clickListener_String;
-  }
-
-  public BaseModelViewModel_ baseModelString(String baseModelString) {
-    assignedAttributes_epoxyGeneratedModel.set(1);
-    onMutation();
-    super.baseModelString = baseModelString;
-    return this;
-  }
-
-  public String baseModelString() {
-    return baseModelString;
   }
 
   @Override
@@ -266,8 +266,8 @@ public class BaseModelViewModel_ extends TestBaseModel<BaseModelView> implements
     onModelVisibilityStateChangedListener_epoxyGeneratedModel = null;
     onModelVisibilityChangedListener_epoxyGeneratedModel = null;
     assignedAttributes_epoxyGeneratedModel.clear();
-    this.clickListener_String = null;
     super.baseModelString = null;
+    this.clickListener_String = null;
     super.reset();
     return this;
   }
@@ -296,10 +296,10 @@ public class BaseModelViewModel_ extends TestBaseModel<BaseModelView> implements
     if (((onModelVisibilityChangedListener_epoxyGeneratedModel == null) != (that.onModelVisibilityChangedListener_epoxyGeneratedModel == null))) {
       return false;
     }
-    if ((clickListener_String != null ? !clickListener_String.equals(that.clickListener_String) : that.clickListener_String != null)) {
+    if ((baseModelString != null ? !baseModelString.equals(that.baseModelString) : that.baseModelString != null)) {
       return false;
     }
-    if ((baseModelString != null ? !baseModelString.equals(that.baseModelString) : that.baseModelString != null)) {
+    if ((clickListener_String != null ? !clickListener_String.equals(that.clickListener_String) : that.clickListener_String != null)) {
       return false;
     }
     return true;
@@ -312,16 +312,16 @@ public class BaseModelViewModel_ extends TestBaseModel<BaseModelView> implements
     _result = 31 * _result + (onModelUnboundListener_epoxyGeneratedModel != null ? 1 : 0);
     _result = 31 * _result + (onModelVisibilityStateChangedListener_epoxyGeneratedModel != null ? 1 : 0);
     _result = 31 * _result + (onModelVisibilityChangedListener_epoxyGeneratedModel != null ? 1 : 0);
-    _result = 31 * _result + (clickListener_String != null ? clickListener_String.hashCode() : 0);
     _result = 31 * _result + (baseModelString != null ? baseModelString.hashCode() : 0);
+    _result = 31 * _result + (clickListener_String != null ? clickListener_String.hashCode() : 0);
     return _result;
   }
 
   @Override
   public String toString() {
     return "BaseModelViewModel_{" +
-        "clickListener_String=" + clickListener_String +
-        ", baseModelString=" + baseModelString +
+        "baseModelString=" + baseModelString +
+        ", clickListener_String=" + clickListener_String +
         "}" + super.toString();
   }
 

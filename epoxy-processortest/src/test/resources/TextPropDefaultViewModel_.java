@@ -30,17 +30,17 @@ public class TextPropDefaultViewModel_ extends EpoxyModel<TextPropDefaultView> i
 
   /**
    * Bitset index: 0 */
-  private StringAttributeData textWithDefault_StringAttributeData =  new StringAttributeData(R.string.string_resource_value);
+  private StringAttributeData nullableTextWithDefault_StringAttributeData =  new StringAttributeData(R.string.string_resource_value);
 
   /**
    * Bitset index: 1 */
-  private StringAttributeData nullableTextWithDefault_StringAttributeData =  new StringAttributeData(R.string.string_resource_value);
+  private StringAttributeData textWithDefault_StringAttributeData =  new StringAttributeData(R.string.string_resource_value);
 
   @Override
   public void addTo(EpoxyController controller) {
     super.addTo(controller);
     addWithDebugValidation(controller);
-    if (!assignedAttributes_epoxyGeneratedModel.get(0)) {
+    if (!assignedAttributes_epoxyGeneratedModel.get(1)) {
     	throw new IllegalStateException("A value is required for textWithDefault");
     }
   }
@@ -163,6 +163,68 @@ public class TextPropDefaultViewModel_ extends EpoxyModel<TextPropDefaultView> i
     return this;
   }
 
+  @Nullable
+  public CharSequence getNullableTextWithDefault(Context context) {
+    return nullableTextWithDefault_StringAttributeData.toString(context);
+  }
+
+  /**
+   * <i>Optional</i>: Default value is R.string.string_resource_value
+   *
+   * @see TextPropDefaultView#nullableTextWithDefault(CharSequence)
+   */
+  public TextPropDefaultViewModel_ nullableTextWithDefault(
+      @Nullable CharSequence nullableTextWithDefault) {
+    onMutation();
+    assignedAttributes_epoxyGeneratedModel.set(0);
+    nullableTextWithDefault_StringAttributeData.setValue(nullableTextWithDefault);
+    return this;
+  }
+
+  /**
+   * If a value of 0 is set then this attribute will revert to its default value.
+   * <p>
+   * <i>Optional</i>: Default value is R.string.string_resource_value
+   *
+   * @see TextPropDefaultView#nullableTextWithDefault(CharSequence)
+   */
+  public TextPropDefaultViewModel_ nullableTextWithDefault(@StringRes int stringRes) {
+    onMutation();
+    assignedAttributes_epoxyGeneratedModel.set(0);
+    nullableTextWithDefault_StringAttributeData.setValue(stringRes);
+    return this;
+  }
+
+  /**
+   * If a value of 0 is set then this attribute will revert to its default value.
+   * <p>
+   * <i>Optional</i>: Default value is R.string.string_resource_value
+   *
+   * @see TextPropDefaultView#nullableTextWithDefault(CharSequence)
+   */
+  public TextPropDefaultViewModel_ nullableTextWithDefault(@StringRes int stringRes,
+      Object... formatArgs) {
+    onMutation();
+    assignedAttributes_epoxyGeneratedModel.set(0);
+    nullableTextWithDefault_StringAttributeData.setValue(stringRes, formatArgs);
+    return this;
+  }
+
+  /**
+   * If a value of 0 is set then this attribute will revert to its default value.
+   * <p>
+   * <i>Optional</i>: Default value is R.string.string_resource_value
+   *
+   * @see TextPropDefaultView#nullableTextWithDefault(CharSequence)
+   */
+  public TextPropDefaultViewModel_ nullableTextWithDefaultQuantityRes(@PluralsRes int pluralRes,
+      int quantity, Object... formatArgs) {
+    onMutation();
+    assignedAttributes_epoxyGeneratedModel.set(0);
+    nullableTextWithDefault_StringAttributeData.setValue(pluralRes, quantity, formatArgs);
+    return this;
+  }
+
   public CharSequence getTextWithDefault(Context context) {
     return textWithDefault_StringAttributeData.toString(context);
   }
@@ -174,7 +236,7 @@ public class TextPropDefaultViewModel_ extends EpoxyModel<TextPropDefaultView> i
    */
   public TextPropDefaultViewModel_ textWithDefault(@NonNull CharSequence textWithDefault) {
     onMutation();
-    assignedAttributes_epoxyGeneratedModel.set(0);
+    assignedAttributes_epoxyGeneratedModel.set(1);
     if (textWithDefault == null) {
       throw new IllegalArgumentException("textWithDefault cannot be null");
     }
@@ -191,7 +253,7 @@ public class TextPropDefaultViewModel_ extends EpoxyModel<TextPropDefaultView> i
    */
   public TextPropDefaultViewModel_ textWithDefault(@StringRes int stringRes) {
     onMutation();
-    assignedAttributes_epoxyGeneratedModel.set(0);
+    assignedAttributes_epoxyGeneratedModel.set(1);
     textWithDefault_StringAttributeData.setValue(stringRes);
     return this;
   }
@@ -205,7 +267,7 @@ public class TextPropDefaultViewModel_ extends EpoxyModel<TextPropDefaultView> i
    */
   public TextPropDefaultViewModel_ textWithDefault(@StringRes int stringRes, Object... formatArgs) {
     onMutation();
-    assignedAttributes_epoxyGeneratedModel.set(0);
+    assignedAttributes_epoxyGeneratedModel.set(1);
     textWithDefault_StringAttributeData.setValue(stringRes, formatArgs);
     return this;
   }
@@ -220,70 +282,8 @@ public class TextPropDefaultViewModel_ extends EpoxyModel<TextPropDefaultView> i
   public TextPropDefaultViewModel_ textWithDefaultQuantityRes(@PluralsRes int pluralRes,
       int quantity, Object... formatArgs) {
     onMutation();
-    assignedAttributes_epoxyGeneratedModel.set(0);
+    assignedAttributes_epoxyGeneratedModel.set(1);
     textWithDefault_StringAttributeData.setValue(pluralRes, quantity, formatArgs);
-    return this;
-  }
-
-  @Nullable
-  public CharSequence getNullableTextWithDefault(Context context) {
-    return nullableTextWithDefault_StringAttributeData.toString(context);
-  }
-
-  /**
-   * <i>Optional</i>: Default value is R.string.string_resource_value
-   *
-   * @see TextPropDefaultView#nullableTextWithDefault(CharSequence)
-   */
-  public TextPropDefaultViewModel_ nullableTextWithDefault(
-      @Nullable CharSequence nullableTextWithDefault) {
-    onMutation();
-    assignedAttributes_epoxyGeneratedModel.set(1);
-    nullableTextWithDefault_StringAttributeData.setValue(nullableTextWithDefault);
-    return this;
-  }
-
-  /**
-   * If a value of 0 is set then this attribute will revert to its default value.
-   * <p>
-   * <i>Optional</i>: Default value is R.string.string_resource_value
-   *
-   * @see TextPropDefaultView#nullableTextWithDefault(CharSequence)
-   */
-  public TextPropDefaultViewModel_ nullableTextWithDefault(@StringRes int stringRes) {
-    onMutation();
-    assignedAttributes_epoxyGeneratedModel.set(1);
-    nullableTextWithDefault_StringAttributeData.setValue(stringRes);
-    return this;
-  }
-
-  /**
-   * If a value of 0 is set then this attribute will revert to its default value.
-   * <p>
-   * <i>Optional</i>: Default value is R.string.string_resource_value
-   *
-   * @see TextPropDefaultView#nullableTextWithDefault(CharSequence)
-   */
-  public TextPropDefaultViewModel_ nullableTextWithDefault(@StringRes int stringRes,
-      Object... formatArgs) {
-    onMutation();
-    assignedAttributes_epoxyGeneratedModel.set(1);
-    nullableTextWithDefault_StringAttributeData.setValue(stringRes, formatArgs);
-    return this;
-  }
-
-  /**
-   * If a value of 0 is set then this attribute will revert to its default value.
-   * <p>
-   * <i>Optional</i>: Default value is R.string.string_resource_value
-   *
-   * @see TextPropDefaultView#nullableTextWithDefault(CharSequence)
-   */
-  public TextPropDefaultViewModel_ nullableTextWithDefaultQuantityRes(@PluralsRes int pluralRes,
-      int quantity, Object... formatArgs) {
-    onMutation();
-    assignedAttributes_epoxyGeneratedModel.set(1);
-    nullableTextWithDefault_StringAttributeData.setValue(pluralRes, quantity, formatArgs);
     return this;
   }
 
@@ -367,8 +367,8 @@ public class TextPropDefaultViewModel_ extends EpoxyModel<TextPropDefaultView> i
     onModelVisibilityStateChangedListener_epoxyGeneratedModel = null;
     onModelVisibilityChangedListener_epoxyGeneratedModel = null;
     assignedAttributes_epoxyGeneratedModel.clear();
-    this.textWithDefault_StringAttributeData =  new StringAttributeData(R.string.string_resource_value);
     this.nullableTextWithDefault_StringAttributeData =  new StringAttributeData(R.string.string_resource_value);
+    this.textWithDefault_StringAttributeData =  new StringAttributeData(R.string.string_resource_value);
     super.reset();
     return this;
   }
@@ -397,10 +397,10 @@ public class TextPropDefaultViewModel_ extends EpoxyModel<TextPropDefaultView> i
     if (((onModelVisibilityChangedListener_epoxyGeneratedModel == null) != (that.onModelVisibilityChangedListener_epoxyGeneratedModel == null))) {
       return false;
     }
-    if ((textWithDefault_StringAttributeData != null ? !textWithDefault_StringAttributeData.equals(that.textWithDefault_StringAttributeData) : that.textWithDefault_StringAttributeData != null)) {
+    if ((nullableTextWithDefault_StringAttributeData != null ? !nullableTextWithDefault_StringAttributeData.equals(that.nullableTextWithDefault_StringAttributeData) : that.nullableTextWithDefault_StringAttributeData != null)) {
       return false;
     }
-    if ((nullableTextWithDefault_StringAttributeData != null ? !nullableTextWithDefault_StringAttributeData.equals(that.nullableTextWithDefault_StringAttributeData) : that.nullableTextWithDefault_StringAttributeData != null)) {
+    if ((textWithDefault_StringAttributeData != null ? !textWithDefault_StringAttributeData.equals(that.textWithDefault_StringAttributeData) : that.textWithDefault_StringAttributeData != null)) {
       return false;
     }
     return true;
@@ -413,16 +413,16 @@ public class TextPropDefaultViewModel_ extends EpoxyModel<TextPropDefaultView> i
     _result = 31 * _result + (onModelUnboundListener_epoxyGeneratedModel != null ? 1 : 0);
     _result = 31 * _result + (onModelVisibilityStateChangedListener_epoxyGeneratedModel != null ? 1 : 0);
     _result = 31 * _result + (onModelVisibilityChangedListener_epoxyGeneratedModel != null ? 1 : 0);
-    _result = 31 * _result + (textWithDefault_StringAttributeData != null ? textWithDefault_StringAttributeData.hashCode() : 0);
     _result = 31 * _result + (nullableTextWithDefault_StringAttributeData != null ? nullableTextWithDefault_StringAttributeData.hashCode() : 0);
+    _result = 31 * _result + (textWithDefault_StringAttributeData != null ? textWithDefault_StringAttributeData.hashCode() : 0);
     return _result;
   }
 
   @Override
   public String toString() {
     return "TextPropDefaultViewModel_{" +
-        "textWithDefault_StringAttributeData=" + textWithDefault_StringAttributeData +
-        ", nullableTextWithDefault_StringAttributeData=" + nullableTextWithDefault_StringAttributeData +
+        "nullableTextWithDefault_StringAttributeData=" + nullableTextWithDefault_StringAttributeData +
+        ", textWithDefault_StringAttributeData=" + textWithDefault_StringAttributeData +
         "}" + super.toString();
   }
 

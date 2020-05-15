@@ -43,11 +43,11 @@ public class ModelViewWithParisModel_ extends EpoxyModel<ModelViewWithParis> imp
 
   /**
    * Bitset index: 0 */
-  private int value_Int = 0;
+  private Style style = DEFAULT_PARIS_STYLE;
 
   /**
    * Bitset index: 1 */
-  private Style style = DEFAULT_PARIS_STYLE;
+  private int value_Int = 0;
 
   @Override
   public void addTo(EpoxyController controller) {
@@ -205,7 +205,7 @@ public class ModelViewWithParisModel_ extends EpoxyModel<ModelViewWithParis> imp
   }
 
   public ModelViewWithParisModel_ style(Style style) {
-    assignedAttributes_epoxyGeneratedModel.set(1);
+    assignedAttributes_epoxyGeneratedModel.set(0);
     onMutation();
     this.style = style;
     return this;
@@ -260,7 +260,7 @@ public class ModelViewWithParisModel_ extends EpoxyModel<ModelViewWithParis> imp
    * @see ModelViewWithParis#value
    */
   public ModelViewWithParisModel_ value(int value) {
-    assignedAttributes_epoxyGeneratedModel.set(0);
+    assignedAttributes_epoxyGeneratedModel.set(1);
     onMutation();
     this.value_Int = value;
     return this;
@@ -349,8 +349,8 @@ public class ModelViewWithParisModel_ extends EpoxyModel<ModelViewWithParis> imp
     onModelVisibilityStateChangedListener_epoxyGeneratedModel = null;
     onModelVisibilityChangedListener_epoxyGeneratedModel = null;
     assignedAttributes_epoxyGeneratedModel.clear();
-    this.value_Int = 0;
     this.style = DEFAULT_PARIS_STYLE;
+    this.value_Int = 0;
     super.reset();
     return this;
   }
@@ -379,10 +379,10 @@ public class ModelViewWithParisModel_ extends EpoxyModel<ModelViewWithParis> imp
     if (((onModelVisibilityChangedListener_epoxyGeneratedModel == null) != (that.onModelVisibilityChangedListener_epoxyGeneratedModel == null))) {
       return false;
     }
-    if ((value_Int != that.value_Int)) {
+    if ((style != null ? !style.equals(that.style) : that.style != null)) {
       return false;
     }
-    if ((style != null ? !style.equals(that.style) : that.style != null)) {
+    if ((value_Int != that.value_Int)) {
       return false;
     }
     return true;
@@ -395,16 +395,16 @@ public class ModelViewWithParisModel_ extends EpoxyModel<ModelViewWithParis> imp
     _result = 31 * _result + (onModelUnboundListener_epoxyGeneratedModel != null ? 1 : 0);
     _result = 31 * _result + (onModelVisibilityStateChangedListener_epoxyGeneratedModel != null ? 1 : 0);
     _result = 31 * _result + (onModelVisibilityChangedListener_epoxyGeneratedModel != null ? 1 : 0);
-    _result = 31 * _result + value_Int;
     _result = 31 * _result + (style != null ? style.hashCode() : 0);
+    _result = 31 * _result + value_Int;
     return _result;
   }
 
   @Override
   public String toString() {
     return "ModelViewWithParisModel_{" +
-        "value_Int=" + value_Int +
-        ", style=" + style +
+        "style=" + style +
+        ", value_Int=" + value_Int +
         "}" + super.toString();
   }
 

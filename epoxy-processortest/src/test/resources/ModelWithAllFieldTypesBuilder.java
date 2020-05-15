@@ -29,25 +29,15 @@ public interface ModelWithAllFieldTypesBuilder {
   ModelWithAllFieldTypesBuilder onVisibilityChanged(
       OnModelVisibilityChangedListener<ModelWithAllFieldTypes_, Object> listener);
 
-  ModelWithAllFieldTypesBuilder valueInt(int valueInt);
+  ModelWithAllFieldTypesBuilder valueBoolean(boolean valueBoolean);
 
-  ModelWithAllFieldTypesBuilder valueInteger(Integer valueInteger);
+  ModelWithAllFieldTypesBuilder valueBooleanWrapper(Boolean valueBooleanWrapper);
 
-  ModelWithAllFieldTypesBuilder valueShort(short valueShort);
-
-  ModelWithAllFieldTypesBuilder valueShortWrapper(Short valueShortWrapper);
+  ModelWithAllFieldTypesBuilder valueByteWrapper(Byte valueByteWrapper);
 
   ModelWithAllFieldTypesBuilder valueChar(char valueChar);
 
   ModelWithAllFieldTypesBuilder valueCharacter(Character valueCharacter);
-
-  ModelWithAllFieldTypesBuilder valuebByte(byte valuebByte);
-
-  ModelWithAllFieldTypesBuilder valueByteWrapper(Byte valueByteWrapper);
-
-  ModelWithAllFieldTypesBuilder valueLong(long valueLong);
-
-  ModelWithAllFieldTypesBuilder valueLongWrapper(Long valueLongWrapper);
 
   ModelWithAllFieldTypesBuilder valueDouble(double valueDouble);
 
@@ -57,19 +47,29 @@ public interface ModelWithAllFieldTypesBuilder {
 
   ModelWithAllFieldTypesBuilder valueFloatWrapper(Float valueFloatWrapper);
 
-  ModelWithAllFieldTypesBuilder valueBoolean(boolean valueBoolean);
-
-  ModelWithAllFieldTypesBuilder valueBooleanWrapper(Boolean valueBooleanWrapper);
+  ModelWithAllFieldTypesBuilder valueInt(int valueInt);
 
   ModelWithAllFieldTypesBuilder valueIntArray(int[] valueIntArray);
 
-  ModelWithAllFieldTypesBuilder valueObjectArray(Object[] valueObjectArray);
+  ModelWithAllFieldTypesBuilder valueInteger(Integer valueInteger);
 
-  ModelWithAllFieldTypesBuilder valueString(String valueString);
+  ModelWithAllFieldTypesBuilder valueList(List<String> valueList);
+
+  ModelWithAllFieldTypesBuilder valueLong(long valueLong);
+
+  ModelWithAllFieldTypesBuilder valueLongWrapper(Long valueLongWrapper);
 
   ModelWithAllFieldTypesBuilder valueObject(Object valueObject);
 
-  ModelWithAllFieldTypesBuilder valueList(List<String> valueList);
+  ModelWithAllFieldTypesBuilder valueObjectArray(Object[] valueObjectArray);
+
+  ModelWithAllFieldTypesBuilder valueShort(short valueShort);
+
+  ModelWithAllFieldTypesBuilder valueShortWrapper(Short valueShortWrapper);
+
+  ModelWithAllFieldTypesBuilder valueString(String valueString);
+
+  ModelWithAllFieldTypesBuilder valuebByte(byte valuebByte);
 
   ModelWithAllFieldTypesBuilder id(long id);
 
