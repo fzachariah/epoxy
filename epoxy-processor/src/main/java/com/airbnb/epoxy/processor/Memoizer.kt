@@ -185,4 +185,76 @@ class Memoizer(val types: Types, val elements: Elements) {
             viewType
         )
     }
+
+    /**
+     * Looks up all of the declared EpoxyAttribute fields on superclasses and returns
+     * attribute info for them.
+     */
+    fun getInheritedEpoxyAttributes(
+        originatingSuperClassType: TypeMirror,
+        modelPackage: String,
+        logger: Logger,
+        includeSuperClass: (TypeElement) -> Boolean = { true }
+    ): List<AttributeInfo> {
+        val result = mutableListOf<AttributeInfo>()
+
+        var currentSuperClassElement: TypeElement? =
+            (types.asElement(originatingSuperClassType) as TypeElement).ensureLoaded()
+
+        while (currentSuperClassElement != null) {
+            val superClassAttributes = getEpoxyAttributesOnElement(
+                currentSuperClassElement,
+                logger
+            )
+
+            val attributes = superClassAttributes?.superClassAttributes
+
+            if (attributes?.isNotEmpty() == true) {
+                attributes.takeIf {
+                    includeSuperClass(currentSuperClassElement!!)
+                }?.filterTo(result) {
+                    // We can't inherit a package private attribute if we're not in the same package
+                    !it.isPackagePrivate || modelPackage == superClassAttributes.superClassPackage
+                }
+            }
+
+            currentSuperClassElement = currentSuperClassElement.superClassElement(types)
+        }
+
+        return result
+    }
+
+    data class SuperClassAttributes(
+        val superClassPackage: String,
+        val superClassAttributes: List<AttributeInfo>
+    )
+
+    private val inheritedEpoxyAttributes = mutableMapOf<Name, SuperClassAttributes?>()
+
+    private fun getEpoxyAttributesOnElement(
+        classElement: TypeElement,
+        logger: Logger
+    ): SuperClassAttributes? {
+        return synchronized(inheritedEpoxyAttributes) {
+            inheritedEpoxyAttributes.getOrPut(classElement.qualifiedName) {
+                if (!Utils.isEpoxyModel(classElement.asType())) {
+                    null
+                } else {
+                    val attributes = classElement
+                        .enclosedElementsThreadSafe
+                        .filter { it.getAnnotation(EpoxyAttribute::class.java) != null }
+                        .map {
+                            EpoxyProcessor.buildAttributeInfo(it, logger, types, elements)
+                        }
+
+                    SuperClassAttributes(
+                        superClassPackage = elements.getPackageOf(
+                            classElement
+                        ).qualifiedName.toString(),
+                        superClassAttributes = attributes
+                    )
+                }
+            }
+        }
+    }
 }

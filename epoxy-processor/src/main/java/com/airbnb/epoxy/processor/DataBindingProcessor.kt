@@ -23,7 +23,7 @@ class DataBindingProcessor : BaseProcessor() {
         EpoxyDataBindingPattern::class
     )
 
-    override suspend fun processRound(roundEnv: RoundEnvironment) {
+    override suspend fun processRound(roundEnv: RoundEnvironment, roundNumber: Int) {
 
         roundEnv.getElementsAnnotatedWith(EpoxyDataBindingLayouts::class)
             .map("parse EpoxyDataBindingLayouts") { layoutsAnnotatedElement ->

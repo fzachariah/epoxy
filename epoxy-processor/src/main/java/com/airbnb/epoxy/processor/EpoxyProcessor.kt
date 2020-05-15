@@ -35,8 +35,8 @@ class EpoxyProcessor : BaseProcessorWithPackageConfigs() {
         EpoxyAttribute::class
     )
 
-    override suspend fun processRound(roundEnv: RoundEnvironment) {
-        super.processRound(roundEnv)
+    override suspend fun processRound(roundEnv: RoundEnvironment, roundNumber: Int) {
+        super.processRound(roundEnv, roundNumber)
         val modelClassMap = ConcurrentHashMap<TypeElement, GeneratedModelInfo>()
 
         roundEnv.getElementsAnnotatedWith(EpoxyAttribute::class)
@@ -176,11 +176,9 @@ class EpoxyProcessor : BaseProcessorWithPackageConfigs() {
             // generate a class for the super class EpoxyModel in the other module since one
             // will be created when that module is processed. If we make one as well there will
             // be a duplicate (causes proguard errors and is just wrong).
-            getInheritedEpoxyAttributes(
+            memoizer.getInheritedEpoxyAttributes(
                 currentEpoxyModel.superclass.ensureLoaded(),
                 generatedModelInfo.generatedName.packageName(),
-                typeUtils,
-                elementUtils,
                 logger,
                 includeSuperClass = { superClassElement ->
                     !modelClassMap.keys.contains(superClassElement)
@@ -238,45 +236,6 @@ class EpoxyProcessor : BaseProcessorWithPackageConfigs() {
                 true
             )
             return BaseModelAttributeInfo(attribute, typeUtils, elementUtils, logger)
-        }
-
-        /**
-         * Looks up all of the declared EpoxyAttribute fields on superclasses and returns
-         * attribute info for them.
-         */
-        fun getInheritedEpoxyAttributes(
-            originatingSuperClassType: TypeMirror,
-            modelPackage: String,
-            typeUtils: Types,
-            elementUtils: Elements,
-            logger: Logger,
-            includeSuperClass: (TypeElement) -> Boolean = { true }
-        ): List<AttributeInfo> {
-            val result = mutableListOf<AttributeInfo>()
-            var currentSuperClassType: TypeMirror = originatingSuperClassType.ensureLoaded()
-
-            while (Utils.isEpoxyModel(currentSuperClassType)) {
-                val currentSuperClassElement =
-                    (typeUtils.asElement(currentSuperClassType) as TypeElement)
-
-                currentSuperClassElement
-                    .takeIf(includeSuperClass)
-                    ?.enclosedElementsThreadSafe
-                    ?.filter { it.getAnnotation(EpoxyAttribute::class.java) != null }
-                    ?.map {
-                        buildAttributeInfo(it, logger, typeUtils, elementUtils)
-                    }
-                    ?.filterTo(result) {
-                        // We can't inherit a package private attribute if we're not in the same package
-                        !it.isPackagePrivate || modelPackage == elementUtils.getPackageOf(
-                            currentSuperClassElement
-                        ).qualifiedName.toString()
-                    }
-
-                currentSuperClassType = currentSuperClassElement.superclass.ensureLoaded()
-            }
-
-            return result
         }
     }
 }

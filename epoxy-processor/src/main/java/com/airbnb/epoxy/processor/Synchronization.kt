@@ -53,7 +53,7 @@ inline fun <R> synchronizedForTypeLookup(block: () -> R): R {
 fun <T : Element> T.ensureLoaded(): T {
     if (!synchronizationEnabled || this !is Symbol) return this
 
-    // already completed, can skip synchronization
+    // if already completed, can skip synchronization
     completer ?: return this
 
     synchronizedForTypeLookup {

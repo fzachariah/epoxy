@@ -31,8 +31,8 @@ class ControllerProcessor : BaseProcessorWithPackageConfigs() {
         AutoModel::class
     )
 
-    override suspend fun processRound(roundEnv: RoundEnvironment) {
-        super.processRound(roundEnv)
+    override suspend fun processRound(roundEnv: RoundEnvironment, roundNumber: Int) {
+        super.processRound(roundEnv, roundNumber)
         val controllerClassMap: MutableMap<TypeElement, ControllerClassInfo> = LinkedHashMap()
 
         for (modelFieldElement in roundEnv.getElementsAnnotatedWith(AutoModel::class)) {

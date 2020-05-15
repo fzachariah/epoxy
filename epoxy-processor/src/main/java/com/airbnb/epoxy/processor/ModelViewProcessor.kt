@@ -43,28 +43,34 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
         CallbackProp::class
     )
 
-    override suspend fun processRound(roundEnv: RoundEnvironment) {
-        super.processRound(roundEnv)
+    override suspend fun processRound(roundEnv: RoundEnvironment, roundNumber: Int) {
+        super.processRound(roundEnv, roundNumber)
         processViewAnnotations(roundEnv)
 
-        processSetterAnnotations(roundEnv)
-        processResetAnnotations(roundEnv)
-        processVisibilityStateChangedAnnotations(roundEnv)
-        processVisibilityChangedAnnotations(roundEnv)
-        processAfterBindAnnotations(roundEnv)
+        // Avoid doing the work to look up the rest of the annotations in model view classes
+        // if no new  model view classes were found.
+        if (modelClassMap.isNotEmpty()) {
+            processSetterAnnotations(roundEnv)
+            processResetAnnotations(roundEnv)
+            processVisibilityStateChangedAnnotations(roundEnv)
+            processVisibilityChangedAnnotations(roundEnv)
+            processAfterBindAnnotations(roundEnv)
 
-        updateViewsForInheritedViewAnnotations()
+            updateViewsForInheritedViewAnnotations()
 
-        // Group overloads after inheriting methods from super classes so those can be included in
-        // the groups as well.
-        groupOverloads()
+            // Group overloads after inheriting methods from super classes so those can be included in
+            // the groups as well.
+            groupOverloads()
 
-        // Up until here our code generation has assumed that that all attributes in a group are
-        // view attributes (and not attributes inherited from a base model class), so this should be
-        // done after grouping attributes, and these attributes should not be grouped.
-        updatesViewsForInheritedBaseModelAttributes()
-        addStyleAttributes()
+            // Up until here our code generation has assumed that that all attributes in a group are
+            // view attributes (and not attributes inherited from a base model class), so this should be
+            // done after grouping attributes, and these attributes should not be grouped.
+            updatesViewsForInheritedBaseModelAttributes()
+            addStyleAttributes()
+        }
 
+        // This may write previously generated models that were waiting for their style builder
+        // to be generated.
         writeJava()
 
         generatedModels.addAll(modelClassMap.values)
@@ -176,8 +182,8 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
         }
     }
 
-    private fun groupOverloads() {
-        for (viewInfo in modelClassMap.values) {
+    private suspend fun groupOverloads() {
+        modelClassMap.values.forEach("groupOverloads") { viewInfo ->
             val attributeGroups = HashMap<String, MutableList<AttributeInfo>>()
 
             // Track which groups are created manually by the user via a group annotation param.
@@ -197,26 +203,21 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
                     customGroups.add(groupKey)
                 }
 
-                var group: MutableList<AttributeInfo>? = attributeGroups[groupKey]
-                if (group == null) {
-                    group = ArrayList()
-                    attributeGroups[groupKey] = group
-                }
-
-                group.add(attributeInfo)
+                attributeGroups
+                    .getOrPut(groupKey) { mutableListOf() }
+                    .add(attributeInfo)
             }
 
             for (customGroup in customGroups) {
                 attributeGroups[customGroup]?.let {
                     if (it.size == 1) {
                         val attribute = it[0] as ViewAttributeInfo
-                        logger
-                            .logError(
-                                "Only one setter was included in the custom group " +
-                                    "'$customGroup' at ${viewInfo.viewElement.simpleName}#" +
-                                    "${attribute.viewAttributeName}. Groups should have at " +
-                                    "least 2 setters."
-                            )
+                        logger.logError(
+                            "Only one setter was included in the custom group " +
+                                "'$customGroup' at ${viewInfo.viewElement.simpleName}#" +
+                                "${attribute.viewAttributeName}. Groups should have at " +
+                                "least 2 setters."
+                        )
                     }
                 }
             }
@@ -472,17 +473,15 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
      * base model has [com.airbnb.epoxy.EpoxyAttribute] fields and include those in our model if
      * so.
      */
-    private fun updatesViewsForInheritedBaseModelAttributes() {
-        for (modelViewInfo in modelClassMap.values) {
+    private suspend fun updatesViewsForInheritedBaseModelAttributes() {
+        modelClassMap.values.forEach("updatesViewsForInheritedBaseModelAttributes") { modelViewInfo ->
             // Skip generated model super classes since it will already contain all of the functions
             // necessary for included attributes, and duplicating them is a waste.
-            if (modelViewInfo.isSuperClassAlsoGenerated) continue
+            if (modelViewInfo.isSuperClassAlsoGenerated) return@forEach
 
-            EpoxyProcessor.getInheritedEpoxyAttributes(
+            memoizer.getInheritedEpoxyAttributes(
                 modelViewInfo.superClassElement.asType(),
                 modelViewInfo.generatedClassName.packageName(),
-                typeUtils,
-                elementUtils,
                 logger
             ).let { modelViewInfo.addAttributes(it) }
         }

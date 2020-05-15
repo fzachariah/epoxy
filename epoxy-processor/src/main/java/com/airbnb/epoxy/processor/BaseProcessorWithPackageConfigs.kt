@@ -40,7 +40,15 @@ abstract class BaseProcessorWithPackageConfigs : BaseProcessor() {
         }
     }
 
-    override suspend fun processRound(roundEnv: RoundEnvironment) =
+    override suspend fun processRound(roundEnv: RoundEnvironment, roundNumber: Int) {
+        // We don't expect package configs to be generated, so they should all be picked up in
+        // the first round. This is because the configs greatly influence the settings of the generated
+        // models, and if models in the first round are created with different configs that models
+        // in later rounds (if more configs are picked up) then it would be confusing and potentially
+        // buggy.
+        // This also is a slight optimization to not do extra lookups.
+        if (roundNumber > 1) return
+
         logger.measure("Process package configurations") {
             if (usesPackageEpoxyConfig) {
                 val errors = configManager.processPackageEpoxyConfig(roundEnv)
@@ -52,4 +60,5 @@ abstract class BaseProcessorWithPackageConfigs : BaseProcessor() {
                 logger.logErrors(errors)
             }
         }
+    }
 }

@@ -99,13 +99,15 @@ abstract class BaseProcessor : AbstractProcessor(), Asyncable {
         resourceProcessor = ResourceProcessor(processingEnv, logger, elementUtils, typeUtils)
     }
 
+    private var roundNumber = 1
+
     final override fun process(
         annotations: Set<TypeElement?>,
         roundEnv: RoundEnvironment
     ): Boolean = runBlocking(Dispatchers.Default) {
         try {
-            logger.measure("processRound") {
-                processRound(roundEnv)
+            logger.measure("Process Round: $roundNumber") {
+                processRound(roundEnv, roundNumber++)
             }
         } catch (e: Exception) {
             logger.logError(e)
@@ -140,7 +142,7 @@ abstract class BaseProcessor : AbstractProcessor(), Asyncable {
         false
     }
 
-    protected abstract suspend fun processRound(roundEnv: RoundEnvironment)
+    protected abstract suspend fun processRound(roundEnv: RoundEnvironment, roundNumber: Int)
 
     private suspend fun validateAttributesImplementHashCode(
         generatedClasses: Collection<GeneratedModelInfo>

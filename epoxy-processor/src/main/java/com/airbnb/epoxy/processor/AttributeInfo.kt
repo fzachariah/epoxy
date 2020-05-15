@@ -12,7 +12,7 @@ import com.squareup.javapoet.CodeBlock
 import com.squareup.javapoet.TypeName
 import javax.lang.model.type.TypeMirror
 
-abstract class AttributeInfo {
+abstract class AttributeInfo : Comparable<AttributeInfo> {
 
     lateinit var fieldName: String
         protected set
@@ -200,10 +200,10 @@ abstract class AttributeInfo {
 
     fun setterCode(): String =
         (if (isGenerated) "this." else "super.") +
-                if (isPrivate)
-                    setterMethodName!! + "(\$L)"
-                else
-                    "$fieldName = \$L"
+            if (isPrivate)
+                setterMethodName!! + "(\$L)"
+            else
+                "$fieldName = \$L"
 
     open fun generatedSetterName(): String = fieldName
 
@@ -211,10 +211,10 @@ abstract class AttributeInfo {
 
     override fun toString(): String {
         return ("Attribute {" +
-                "model='" + modelName + '\''.toString() +
-                ", name='" + fieldName + '\''.toString() +
-                ", type=" + typeName +
-                '}'.toString())
+            "model='" + modelName + '\''.toString() +
+            ", name='" + fieldName + '\''.toString() +
+            ", type=" + typeName +
+            '}'.toString())
     }
 
     override fun equals(other: Any?): Boolean {
@@ -236,5 +236,11 @@ abstract class AttributeInfo {
         var result = fieldName.hashCode()
         result = 31 * result + typeName.hashCode()
         return result
+    }
+
+    override fun compareTo(other: AttributeInfo): Int {
+        // sort attributes alphabetically for consistent code generation when attributes
+        // are added concurrently.
+        return fieldName.compareTo(other.fieldName)
     }
 }

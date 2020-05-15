@@ -139,6 +139,10 @@ class GeneratedModelWriter(
             return
         }
 
+        // sort attributes alphabetically for consistent code generation when attributes
+        // are added concurrently.
+//        info.attributeInfo.sort()
+
         val generatedModelName = info.generatedName
 
         val modelClass = buildClass(generatedModelName) {
