@@ -12,7 +12,7 @@ internal class DataBindingAttributeInfo(
     init {
         fieldName = removeSetPrefix(setterMethod.simpleName.toString())
         typeMirror = setterMethod.parametersThreadSafe[0].asType()
-        modelName = modelInfo.generatedName.simpleName()
+        rootClass = modelInfo.generatedName.simpleName()
         packageName = modelInfo.generatedName.packageName()
         useInHash = !modelInfo.enableDoNotHash ||
             hashCodeValidator.implementsHashCodeAndEquals(typeMirror)

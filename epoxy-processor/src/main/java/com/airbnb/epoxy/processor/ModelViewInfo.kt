@@ -178,7 +178,8 @@ class ModelViewInfo(
 
         addAttribute(
             ViewAttributeInfo(
-                modelInfo = this,
+                viewElement = viewElement,
+                viewPackage = generatedClassName.packageName(),
                 hasDefaultKotlinValue = hasDefaultKotlinValue && hasNoArgEquivalent,
                 viewAttributeElement = prop,
                 types = typeUtils,
@@ -192,7 +193,8 @@ class ModelViewInfo(
     fun addPropIfNotExists(prop: Element) {
         addAttributeIfNotExists(
             ViewAttributeInfo(
-                modelInfo = this,
+                viewElement = viewElement,
+                viewPackage = generatedClassName.packageName(),
                 hasDefaultKotlinValue = false,
                 viewAttributeElement = prop,
                 types = typeUtils,
@@ -203,23 +205,19 @@ class ModelViewInfo(
         )
     }
 
-    fun addOnRecycleMethod(resetMethod: Element) {
-        val methodName = resetMethod.simpleName.toString()
+    fun addOnRecycleMethod(methodName: String) {
         resetMethodNames.add(methodName)
     }
 
-    fun addOnVisibilityStateChangedMethod(visibilityMethod: Element) {
-        val methodName = visibilityMethod.simpleName.toString()
+    fun addOnVisibilityStateChangedMethod(methodName: String) {
         visibilityStateChangedMethodNames.add(methodName)
     }
 
-    fun addOnVisibilityChangedMethod(visibilityMethod: Element) {
-        val methodName = visibilityMethod.simpleName.toString()
+    fun addOnVisibilityChangedMethod(methodName: String) {
         visibilityChangedMethodNames.add(methodName)
     }
 
-    fun addAfterPropsSetMethod(afterPropsSetMethod: Element) {
-        val methodName = afterPropsSetMethod.simpleName.toString()
+    fun addAfterPropsSetMethod(methodName: String) {
         afterPropsSetMethodNames.add(methodName)
     }
 

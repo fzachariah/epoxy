@@ -18,7 +18,7 @@ abstract class AttributeInfo : Comparable<AttributeInfo> {
         protected set
     lateinit var typeMirror: TypeMirror
         protected set
-    lateinit var modelName: String
+    lateinit var rootClass: String
         protected set
     var packageName: String? = null
         protected set
@@ -211,7 +211,7 @@ abstract class AttributeInfo : Comparable<AttributeInfo> {
 
     override fun toString(): String {
         return ("Attribute {" +
-            "model='" + modelName + '\''.toString() +
+            "model='" + rootClass + '\''.toString() +
             ", name='" + fieldName + '\''.toString() +
             ", type=" + typeName +
             '}'.toString())

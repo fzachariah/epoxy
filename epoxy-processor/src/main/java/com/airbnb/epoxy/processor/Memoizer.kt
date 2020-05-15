@@ -1,11 +1,19 @@
 package com.airbnb.epoxy.processor
 
+import com.airbnb.epoxy.AfterPropsSet
+import com.airbnb.epoxy.CallbackProp
 import com.airbnb.epoxy.EpoxyAttribute
 import com.airbnb.epoxy.EpoxyModelClass
+import com.airbnb.epoxy.ModelProp
 import com.airbnb.epoxy.ModelView
+import com.airbnb.epoxy.OnViewRecycled
+import com.airbnb.epoxy.OnVisibilityChanged
+import com.airbnb.epoxy.OnVisibilityStateChanged
+import com.airbnb.epoxy.TextProp
 import com.airbnb.epoxy.processor.GeneratedModelInfo.RESET_METHOD
 import com.airbnb.epoxy.processor.GeneratedModelInfo.buildParamSpecs
 import com.airbnb.epoxy.processor.Utils.isSubtype
+import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.Modifier
@@ -18,6 +26,7 @@ import javax.lang.model.type.TypeKind
 import javax.lang.model.type.TypeMirror
 import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
+import kotlin.reflect.KClass
 
 class Memoizer(val types: Types, val elements: Elements) {
 
@@ -257,4 +266,79 @@ class Memoizer(val types: Types, val elements: Elements) {
             }
         }
     }
+
+    class SuperViewAnnotations(
+        val viewPackageName: Name,
+        val annotatedElements: Map<Class<out Annotation>, List<ViewElement>>
+    )
+
+    class ViewElement(
+        val element: Element,
+        val isPackagePrivate: Boolean,
+        val attributeInfo: Lazy<ViewAttributeInfo>
+    ) {
+        val simpleName: String by lazy {
+            element.simpleName.toString()
+        }
+    }
+
+    private val annotationsOnSuperView = mutableMapOf<Name, SuperViewAnnotations>()
+
+    fun getAnnotationsOnViewSuperClass(
+        superViewElement: TypeElement,
+        logger: Logger,
+        resourceProcessor: ResourceProcessor
+    ): SuperViewAnnotations {
+        return synchronized(annotationsOnSuperView) {
+            annotationsOnSuperView.getOrPut(superViewElement.qualifiedName) {
+
+                val viewPackageName = elements.getPackageOf(superViewElement).qualifiedName
+                val annotatedElements =
+                    mutableMapOf<Class<out Annotation>, MutableList<ViewElement>>()
+
+                superViewElement.enclosedElementsThreadSafe.forEach { element ->
+                    val isPackagePrivate by lazy { Utils.isFieldPackagePrivate(element) }
+
+                    viewModelAnnotations.forEach { annotation ->
+                        if (element.getAnnotation(annotation) != null) {
+                            annotatedElements
+                                .getOrPut(annotation) { mutableListOf() }
+                                .add(
+                                    ViewElement(
+                                        element = element,
+                                        isPackagePrivate = isPackagePrivate,
+                                        attributeInfo = lazy {
+                                            ViewAttributeInfo(
+                                                viewElement = superViewElement,
+                                                viewPackage = viewPackageName.toString(),
+                                                hasDefaultKotlinValue = false,
+                                                viewAttributeElement = element,
+                                                types = types,
+                                                elements = elements,
+                                                logger = logger,
+                                                resourceProcessor = resourceProcessor
+                                            )
+                                        })
+                                )
+                        }
+                    }
+                }
+
+                SuperViewAnnotations(
+                    viewPackageName,
+                    annotatedElements
+                )
+            }
+        }
+    }
 }
+
+private val viewModelAnnotations = listOf(
+    ModelProp::class.java,
+    TextProp::class.java,
+    CallbackProp::class.java,
+    AfterPropsSet::class.java,
+    OnVisibilityChanged::class.java,
+    OnVisibilityStateChanged::class.java,
+    OnViewRecycled::class.java
+)

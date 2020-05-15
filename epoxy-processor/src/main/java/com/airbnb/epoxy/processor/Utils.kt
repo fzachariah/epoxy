@@ -314,9 +314,9 @@ internal object Utils {
     @JvmStatic
     fun isFieldPackagePrivate(element: Element): Boolean {
         val modifiers = element.modifiers
-        return (!modifiers.contains(Modifier.PUBLIC)
-            && !modifiers.contains(Modifier.PROTECTED)
-            && !modifiers.contains(Modifier.PRIVATE))
+        return (Modifier.PUBLIC !in modifiers
+            && Modifier.PROTECTED !in modifiers
+            && Modifier.PRIVATE !in modifiers)
     }
 
     /**

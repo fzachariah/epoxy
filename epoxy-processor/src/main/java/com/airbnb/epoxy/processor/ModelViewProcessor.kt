@@ -8,12 +8,9 @@ import com.airbnb.epoxy.OnViewRecycled
 import com.airbnb.epoxy.OnVisibilityChanged
 import com.airbnb.epoxy.OnVisibilityStateChanged
 import com.airbnb.epoxy.TextProp
-import com.airbnb.epoxy.processor.Utils.belongToTheSamePackage
-import com.airbnb.epoxy.processor.Utils.isFieldPackagePrivate
 import com.airbnb.epoxy.processor.Utils.isSubtypeOfType
 import net.ltgt.gradle.incap.IncrementalAnnotationProcessor
 import net.ltgt.gradle.incap.IncrementalAnnotationProcessorType
-import java.util.ArrayList
 import java.util.HashMap
 import java.util.HashSet
 import java.util.concurrent.ConcurrentHashMap
@@ -337,7 +334,7 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
                     return@forEach
                 }
 
-                info.addOnRecycleMethod(recycleMethod as ExecutableElement)
+                info.addOnRecycleMethod(recycleMethod.simpleName.toString())
             }
     }
 
@@ -357,7 +354,7 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
                     return@forEach
                 }
 
-                info.addOnVisibilityStateChangedMethod(visibilityMethod as ExecutableElement)
+                info.addOnVisibilityStateChangedMethod(visibilityMethod.simpleName.toString())
             }
     }
 
@@ -377,7 +374,7 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
                     return@forEach
                 }
 
-                info.addOnVisibilityChangedMethod(visibilityMethod as ExecutableElement)
+                info.addOnVisibilityChangedMethod(visibilityMethod.simpleName.toString())
             }
     }
 
@@ -397,7 +394,7 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
                     return@forEach
                 }
 
-                info.addAfterPropsSetMethod(afterPropsMethod as ExecutableElement)
+                info.addAfterPropsSetMethod(afterPropsMethod.simpleName.toString())
             }
     }
 
@@ -406,29 +403,37 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
 
     /** Include props and reset methods from super class views.  */
     private suspend fun updateViewsForInheritedViewAnnotations() {
+
         modelClassMap.values.forEach("updateViewsForInheritedViewAnnotations") { view ->
             // We walk up the super class tree and look for any elements with epoxy annotations.
             // This approach lets us capture views that we've already processed as well as views
             // in other libraries that we wouldn't have otherwise processed.
 
             view.viewElement.iterateSuperClasses(typeUtils) { superViewElement ->
-                val samePackage = belongToTheSamePackage(
-                    view.viewElement,
+                val annotationsOnViewSuperClass = memoizer.getAnnotationsOnViewSuperClass(
                     superViewElement,
-                    elementUtils
+                    logger,
+                    resourceProcessor
                 )
+
+                val isSamePackage by lazy {
+                    annotationsOnViewSuperClass.viewPackageName == elementUtils.getPackageOf(view.viewElement).qualifiedName
+                }
 
                 fun forEachElementWithAnnotation(
                     annotations: List<KClass<out Annotation>>,
-                    function: (Element) -> Unit
+                    function: (Memoizer.ViewElement) -> Unit
                 ) {
-                    superViewElement.enclosedElementsThreadSafe
-                        .filter {
-                            // Make sure we can access the method
-                            samePackage || !isFieldPackagePrivate(it)
+                    val javaAnnotations = annotations.map { it.java }
+
+                    annotationsOnViewSuperClass.annotatedElements
+                        .filterKeys { annotation ->
+                            annotation in javaAnnotations
                         }
-                        .filter {
-                            hasAnnotation(it, annotations)
+                        .values
+                        .flatten()
+                        .filter { viewElement ->
+                            isSamePackage || !viewElement.isPackagePrivate
                         }
                         .forEach {
                             function(it)
@@ -444,32 +449,27 @@ class ModelViewProcessor : BaseProcessorWithPackageConfigs() {
                     // 1. we should only do that if all methods in the super class are accessible to this (ie not package private and in a different package)
                     // 2. We also need to handle the case the that super view is abstract - right now interfaces are not generated for abstract views
                     // 3. If an abstract view only implements part of the interface it would mess up the way we check which methods count in the interface
-                    view.addPropIfNotExists(it)
+                    view.addAttributeIfNotExists(it.attributeInfo.value)
                 }
 
                 forEachElementWithAnnotation(listOf(OnViewRecycled::class)) {
-                    view.addOnRecycleMethod(it)
+                    view.addOnRecycleMethod(it.simpleName)
                 }
 
                 forEachElementWithAnnotation(listOf(OnVisibilityStateChanged::class)) {
-                    view.addOnVisibilityStateChangedMethod(it)
+                    view.addOnVisibilityStateChangedMethod(it.simpleName)
                 }
 
                 forEachElementWithAnnotation(listOf(OnVisibilityChanged::class)) {
-                    view.addOnVisibilityChangedMethod(it)
+                    view.addOnVisibilityChangedMethod(it.simpleName)
                 }
 
                 forEachElementWithAnnotation(listOf(AfterPropsSet::class)) {
-                    view.addAfterPropsSetMethod(it)
+                    view.addAfterPropsSetMethod(it.simpleName)
                 }
             }
         }
     }
-
-    private fun hasAnnotation(
-        element: Element,
-        annotations: List<KClass<out Annotation>>
-    ): Boolean = annotations.any { element.getAnnotation(it.java) != null }
 
     /**
      * If a view defines a base model that its generated model should extend we need to check if that

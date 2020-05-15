@@ -141,7 +141,10 @@ class ResourceProcessor internal constructor(
             "Compiler Trees instance was not found in processing environment"
         }
 
-        val tree = trees.getTree(element, getAnnotationMirror(element, annotationClass)) as? JCTree
+        val tree = synchronized(trees) {
+            trees.getTree(element, getAnnotationMirror(element, annotationClass)) as? JCTree
+        }
+
         // tree can be null if the references are compiled types and not source
         if (tree != null) {
             val scanner = AnnotationResourceParamScanner()

@@ -38,7 +38,8 @@ sealed class ViewAttributeType {
 }
 
 class ViewAttributeInfo(
-    private val modelInfo: ModelViewInfo,
+    private val viewElement: TypeElement,
+    viewPackage: String,
     val hasDefaultKotlinValue: Boolean,
     viewAttributeElement: Element,
     types: Types,
@@ -59,11 +60,11 @@ class ViewAttributeInfo(
         val callbackAnnotation = viewAttributeElement.getAnnotation(CallbackProp::class.java)
 
         val options = HashSet<Option>()
-        val param = when (viewAttributeElement) {
+        val param: VariableElement = when (viewAttributeElement) {
             is ExecutableElement -> viewAttributeElement.parametersThreadSafe[0]
             is VariableElement -> viewAttributeElement
             else -> error("Unsuppported element type $viewAttributeElement")
-        }
+        }.ensureLoaded()
 
         viewAttributeTypeName = getViewAttributeType(viewAttributeElement, logger)
 
@@ -108,8 +109,8 @@ class ViewAttributeInfo(
         resetWithNull = Option.NullOnRecycle in options
         generateStringOverloads = Option.GenerateStringOverloads in options
 
-        modelName = modelInfo.generatedName.simpleName()
-        packageName = modelInfo.generatedClassName.packageName()
+        this.rootClass = viewElement.simpleName.toString()
+        this.packageName = viewPackage
 
         this.viewAttributeName = viewAttributeElement.simpleName.toString()
         propName = removeSetPrefix(viewAttributeName)
@@ -121,9 +122,12 @@ class ViewAttributeInfo(
         // TODO: (eli_hart 9/26/17) Get the javadoc on the super method if this setter overrides
         // something and doesn't have its own javadoc
         createJavaDoc(
-            elements.getDocComment(viewAttributeElement), codeToSetDefault,
+            elements.getDocComment(viewAttributeElement),
+            codeToSetDefault,
             constantFieldNameForDefaultValue,
-            modelInfo.viewElement, typeMirror, viewAttributeName
+            viewElement,
+            typeMirror,
+            viewAttributeName
         )
 
         validatePropOptions(logger, options, types, elements)
@@ -224,7 +228,7 @@ class ViewAttributeInfo(
             if (defaultConstant.isNotEmpty()) {
                 logger.logError(
                     "Default set via both kotlin parameter and annotation constant. Use only one. (%s#%s)",
-                    modelInfo.viewElement.simpleName,
+                    viewElement.simpleName,
                     viewAttributeName
                 )
             }
@@ -239,7 +243,7 @@ class ViewAttributeInfo(
             return
         }
 
-        var viewClass: TypeElement? = modelInfo.viewElement
+        var viewClass: TypeElement? = viewElement
         while (viewClass != null) {
             for (element in viewClass.enclosedElementsThreadSafe) {
                 if (checkElementForConstant(element, defaultConstant, types, logger)) {
@@ -253,7 +257,7 @@ class ViewAttributeInfo(
         logger.logError(
             "The default value for (%s#%s) could not be found. Expected a constant named " +
                 "'%s' in the " + "view class.",
-            modelInfo.viewElement.simpleName, viewAttributeName, defaultConstant
+            viewElement.simpleName, viewAttributeName, defaultConstant
         )
     }
 
@@ -274,7 +278,7 @@ class ViewAttributeInfo(
                 logger.logError(
                     "Default values for view props must be static, final, and not private. " +
                         "(%s#%s)",
-                    modelInfo.viewElement.simpleName, viewAttributeName
+                    viewElement.simpleName, viewAttributeName
                 )
                 return true
             }
@@ -283,7 +287,7 @@ class ViewAttributeInfo(
             if (!isAssignable(element.asType(), typeMirror, types)) {
                 logger.logError(
                     "The default value for (%s#%s) must be a %s.",
-                    modelInfo.viewElement.simpleName, viewAttributeName, typeMirror
+                    viewElement.simpleName, viewAttributeName, typeMirror
                 )
                 return true
             }
@@ -291,7 +295,7 @@ class ViewAttributeInfo(
 
             codeToSetDefault.explicit = CodeBlock.of(
                 "\$T.\$L",
-                ClassName.get(modelInfo.viewElement),
+                ClassName.get(viewElement),
                 constantName
             )
 
@@ -312,7 +316,7 @@ class ViewAttributeInfo(
                 .logError(
                     "Illegal to use both %s and %s options in an %s annotation. (%s#%s)",
                     Option.DoNotHash, Option.IgnoreRequireHashCode,
-                    ModelProp::class.java.simpleName, modelName, viewAttributeName
+                    ModelProp::class.java.simpleName, rootClass, viewAttributeName
                 )
         }
 
@@ -323,7 +327,7 @@ class ViewAttributeInfo(
             logger
                 .logError(
                     "Setters with %s option must be a CharSequence. (%s#%s)",
-                    Option.GenerateStringOverloads, modelName, viewAttributeName
+                    Option.GenerateStringOverloads, rootClass, viewAttributeName
                 )
         }
 
@@ -332,7 +336,7 @@ class ViewAttributeInfo(
                 .logError(
                     "Setters with %s option must have a type that is annotated with @Nullable. " +
                         "(%s#%s)",
-                    Option.NullOnRecycle, modelName, viewAttributeName
+                    Option.NullOnRecycle, rootClass, viewAttributeName
                 )
         }
     }
@@ -423,15 +427,19 @@ class ViewAttributeInfo(
             builder.add("<i>Required.</i>")
         } else {
             builder.add("<i>Optional</i>: ")
-            if (hasDefaultKotlinValue) {
-                builder.add("View function has a Kotlin default argument")
-            } else if (constantFieldNameForDefaultValue == null) {
-                builder.add("Default value is \$L", codeToSetDefault.value())
-            } else {
-                builder.add(
-                    "Default value is <b>{@value \$T#\$L}</b>", ClassName.get(viewElement),
-                    constantFieldNameForDefaultValue
-                )
+            when {
+                hasDefaultKotlinValue -> {
+                    builder.add("View function has a Kotlin default argument")
+                }
+                constantFieldNameForDefaultValue == null -> {
+                    builder.add("Default value is \$L", codeToSetDefault.value())
+                }
+                else -> {
+                    builder.add(
+                        "Default value is <b>{@value \$T#\$L}</b>", ClassName.get(viewElement),
+                        constantFieldNameForDefaultValue
+                    )
+                }
             }
         }
 
@@ -463,7 +471,7 @@ class ViewAttributeInfo(
 
     override fun toString(): String {
         return ("View Prop {" +
-            "view='" + modelInfo.viewElement.simpleName + '\'' +
+            "view='" + viewElement.simpleName + '\'' +
             ", name='" + viewAttributeName + '\'' +
             ", type=" + typeName +
             ", hasDefaultKotlinValue=" + hasDefaultKotlinValue +

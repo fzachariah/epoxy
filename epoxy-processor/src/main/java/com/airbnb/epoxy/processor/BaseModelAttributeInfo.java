@@ -4,7 +4,6 @@ import com.airbnb.epoxy.EpoxyAttribute;
 import com.airbnb.epoxy.EpoxyAttribute.Option;
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
-import com.sun.corba.se.impl.orbutil.concurrent.Sync;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
@@ -44,7 +43,7 @@ class BaseModelAttributeInfo extends AttributeInfo {
     setJavaDocString(elements.getDocComment(attribute));
 
     classElement = (TypeElement) attribute.getEnclosingElement();
-    setModelName(classElement.getSimpleName().toString());
+    setRootClass(classElement.getSimpleName().toString());
     setPackageName(elements.getPackageOf(classElement).getQualifiedName().toString());
     this.setHasSuperSetter(hasSuperMethod(classElement, attribute));
     this.setHasFinalModifier(attribute.getModifiers().contains(FINAL));
